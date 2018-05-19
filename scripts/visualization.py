@@ -298,7 +298,7 @@ def plot_gen_3d_offline_r_traj(num=0):
         fig = plt.figure(task_idx+num)
         ax = fig.gca(projection='3d')
         data = robot_traj_offline[task_idx][1]
-        ax.plot(data[:, -7], data[:, -6], data[:, -5], 'r',
+        ax.plot(data[:, 0], data[:, 1], data[:, 2], 'r',
                 linewidth=5, linestyle='--', label='Predicted robot trajectory')
         data = robot_traj_offline[task_idx][0]
         ax.plot(data[:, 0], data[:, 1], data[:, 2], 'b',

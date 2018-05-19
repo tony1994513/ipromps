@@ -17,7 +17,7 @@ datasets_path = os.path.join(file_path, cp_models.get('datasets', 'path'))
 num_alpha_candidate = cp_models.getint('phase', 'num_phaseCandidate')
 task_name_path = os.path.join(datasets_path, 'pkl/task_name_list.pkl')
 task_name = joblib.load(task_name_path)
-sigma = cp_models.get('filter', 'sigma')
+sigma = cp_models.getint('filter', 'sigma')
 ipromps_set = joblib.load(os.path.join(datasets_path, 'pkl/ipromps_set.pkl'))
 datasets_raw = joblib.load(os.path.join(datasets_path, 'pkl/datasets_raw.pkl'))
 num_joints = cp_models.getint('datasets', 'num_joints')
@@ -94,8 +94,8 @@ def main():
     for ipromp_id, ipromp in enumerate(ipromps_set):
         [traj_time, traj] = ipromp.gen_real_traj(alpha_max_list[ipromp_id])
         traj = ipromp.min_max_scaler.inverse_transform(traj)
-        robot_traj = traj[:, -3:]
-        human_traj= traj[:, 0:-3]
+        robot_traj = traj[:, 11:17]
+        human_traj= traj[:, 0:11]
         traj_full.append([human_traj, robot_traj])
 
     # # test: robot motion generation for task2
