@@ -16,7 +16,7 @@ from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Pose
 import baxter_interface
 from baxter_interface import CHECK_VERSION
-
+import ipdb
 # read conf file
 file_path = os.path.dirname(__file__)
 cp = ConfigParser.SafeConfigParser()
@@ -28,17 +28,17 @@ num_alpha_candidate = cp.getint('phase', 'num_phaseCandidate')
 timer_interval = cp.getfloat('online', 'timer_interval')
 task_name_path = os.path.join(datasets_path, 'pkl/task_name_list.pkl')
 task_name = joblib.load(task_name_path)
-sigma = cp.get('filter', 'sigma')
+sigma = cp.getint('filter', 'sigma')
 GROUP_NAME_ARM = 'left_arm'
 
 # tape: [ 1.1169808  -0.12402304 0.23784241]
 # screw: [ 1.09847439 -0.11998706 0.25383563]
 # box: [ 1.10284653 -0.13208417 0.2812103 ]
 #measure: [ 1.12147662 -0.08184267 0.26975943]
-specify_position = np.array([1.12147662, -0.08184267, 0.26975943])
+specify_position = np.array([1.12549807, -0.1559526 ,  0.2495953 ])
 
-# threshold = 0.08
-threshold = 0.08
+threshold = 0.01
+# threshold = 0.12785109291
 
 
 def move_robot(traj, traj_time):
@@ -102,8 +102,8 @@ def move_robot(traj, traj_time):
             rospy.loginfo(
                 "Path planning failed with only " + str(fraction) + " success after " + str(max_tries) + " attempts.")
     rospy.sleep(1)
-    global left_gripper
-    left_gripper.close()
+    # global left_gripper
+    # left_gripper.close()
     print 'closed the gripper'
     draw_line_rviz(traj)
 
@@ -141,11 +141,12 @@ def fun_timer():
     obs_data = np.array([]).reshape([0, ipromps_set[0].num_joints])
     timestamp = []
     for obs_data_list_idx in obs_data_list:
-        # emg = obs_data_list_idx['emg']
+        emg = obs_data_list_idx['emg']
         left_hand = obs_data_list_idx['left_hand']
+        # ipdb.set_trace()
         left_joints = obs_data_list_idx['left_joints']
-        # full_data = np.hstack([emg, left_hand, left_joints])
-        full_data = np.hstack([left_hand, left_joints])
+        full_data = np.hstack([left_hand, emg, left_joints])
+        # full_data = np.hstack([left_hand, left_joints])
         obs_data = np.vstack([obs_data, full_data])
         timestamp.append(obs_data_list_idx['stamp'])
 
@@ -154,7 +155,8 @@ def fun_timer():
     # preprocessing for the data
     obs_data_post_arr = ipromps_set[0].min_max_scaler.transform(obs_data)
     # consider the unobserved info
-    obs_data_post_arr[:, 3:6] = 0.0
+    obs_data_post_arr[:, 11:18] = 0.0
+    # ipdb.set_trace()  
 
     # phase estimation
     rospy.loginfo('Phase estimating...')
@@ -178,19 +180,19 @@ def fun_timer():
         prob_task_temp = ipromp.prob_obs()
         prob_task.append(prob_task_temp)
     idx_max_prob = np.argmax(prob_task)
-    idx_max_prob = 3    # a trick for testing
+    # idx_max_prob = 3    # a trick for testing
     rospy.loginfo('The max fit model index is task %s', task_name[idx_max_prob])
 
     # robot motion generation
     [traj_time, traj] = ipromps_set[idx_max_prob].gen_real_traj(alpha_max_list[idx_max_prob])
     traj = ipromps_set[idx_max_prob].min_max_scaler.inverse_transform(traj)
-    # robot_traj = traj[:, 3:10]
-    robot_traj = traj[:, 3:6]
+    robot_traj = traj[:, 11:17]
+    # robot_traj = traj[:, 3:6]
     robot_traj = filter_static_points(robot_traj)
 
     ######
     # move the robot
-    move_robot(robot_traj, traj_time)
+    # move_robot(robot_traj, traj_time)
 
     # save the conditional result
     rospy.loginfo('Saving the post IProMPs...')
@@ -218,6 +220,8 @@ def callback(data):
                               data.tf_of_interest.transforms[5].transform.translation.y,
                               data.tf_of_interest.transforms[5].transform.translation.z])
         # trigger
+        print left_hand
+        # print (np.linalg.norm(specify_position - left_hand))
         if np.linalg.norm(specify_position - left_hand) < threshold:
             flag_record = True
             print "I'm ready!!!"
@@ -234,9 +238,9 @@ def callback(data):
         init_time = data.header.stamp
 
     # # emg
-    # emg_data = np.array([data.emgStates.ch0, data.emgStates.ch1, data.emgStates.ch2,
-    #                      data.emgStates.ch3, data.emgStates.ch4, data.emgStates.ch5,
-    #                      data.emgStates.ch6, data.emgStates.ch7]).reshape([1, 8])
+    emg_data = np.array([data.emgStates.ch0, data.emgStates.ch1, data.emgStates.ch2,
+                         data.emgStates.ch3, data.emgStates.ch4, data.emgStates.ch5,
+                         data.emgStates.ch6, data.emgStates.ch7]).reshape([1, 8])
 
     # left_hand
     left_hand = np.array([data.tf_of_interest.transforms[5].transform.translation.x,
@@ -244,12 +248,12 @@ def callback(data):
                           data.tf_of_interest.transforms[5].transform.translation.z]).reshape([1, 3])
 
     # left_joints: left_hand actually
-    left_joints = np.zeros_like(np.array([0, 0, 0]).reshape([1, 3]))
+    left_joints = np.zeros_like(np.array([0, 0, 0,0, 0, 0, 0]).reshape([1, 7]))
 
     global obs_data_list
     time_stamp = (data.header.stamp - init_time).secs + (data.header.stamp - init_time).nsecs*1e-9
     obs_data_list.append({
-                          # 'emg': emg_data,
+                          'emg': emg_data,
                           'left_hand': left_hand,
                           'left_joints': left_joints,
                           'stamp': time_stamp})
@@ -279,10 +283,10 @@ def main():
     ipromps_set = joblib.load(os.path.join(datasets_path, 'pkl/ipromps_set.pkl'))
 
     # gripper
-    rs = baxter_interface.RobotEnable(CHECK_VERSION)
-    init_state = rs.state().enabled
-    global left_gripper
-    left_gripper = baxter_interface.Gripper('left', CHECK_VERSION)
+    # rs = baxter_interface.RobotEnable(CHECK_VERSION)
+    # init_state = rs.state().enabled
+    # global left_gripper
+    # left_gripper = baxter_interface.Gripper('left', CHECK_VERSION)
 
     # the flag var of starting info record
     global flag_record, obs_data_list

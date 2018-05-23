@@ -33,8 +33,8 @@ data_index = [map(int, task[1].split(',')) for task in data_index_sec]
 
 def main():
     task_id = 0
-    test_index = 25
-    obs_ratio = 0.1
+    test_index = 0
+    obs_ratio = 0.4
 
     # read test data
     obs_data_dict = datasets_raw[task_id][test_index]

@@ -265,6 +265,7 @@ def plot_offline_3d_obs(num=0):
         ax.plot(data[:, 0], data[:, 1], data[:, 2],
                 '-', linewidth=5, color='blue', label='Human trajectory ground truth', alpha = 1.0)
         data = ground_truth['left_joints']
+        # import ipdb;ipdb.set_trace()
         ax.plot(data[:, -7], data[:, -6], data[:, -5],
                 linewidth=5, linestyle='-', color='r', label='Robot trajectory ground Truth', alpha=1.0)
         ax.set_xlabel('X (m)')
