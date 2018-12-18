@@ -4,7 +4,9 @@ from scipy.ndimage.filters import gaussian_filter1d
 import os
 import ConfigParser
 from sklearn.externals import joblib
-
+import ipdb
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 # read the current file path
 file_path = os.path.dirname(__file__)
@@ -20,8 +22,7 @@ task_name = joblib.load(task_name_path)
 sigma = cp_models.getint('filter', 'sigma')
 ipromps_set = joblib.load(os.path.join(datasets_path, 'pkl/ipromps_set.pkl'))
 datasets_raw = joblib.load(os.path.join(datasets_path, 'pkl/datasets_raw.pkl'))
-num_joints = cp_models.getint('datasets', 'num_joints')
-num_obs_joints = cp_models.getint('datasets', 'num_obs_joints')
+num_obs_dim = cp_models.getint('datasets', 'num_obs_dim')
 
 # read datasets cfg file
 cp_datasets = ConfigParser.SafeConfigParser()
@@ -30,11 +31,18 @@ cp_datasets.read(os.path.join(datasets_path, './info/cfg/datasets.cfg'))
 data_index_sec = cp_datasets.items('index_17')
 data_index = [map(int, task[1].split(',')) for task in data_index_sec]
 
+# after processed human/robot index
+human_index = cp_models.get('processed_index', 'human')
+robot_index = cp_models.get('processed_index', 'robot')
+human_index =  [int(x.strip()) for x in human_index.split(',')]
+robot_index =  [int(x.strip()) for x in robot_index.split(',')]
+
 
 def main():
     task_id = 0
-    test_index = 0
+    test_index = 8
     obs_ratio = 0.4
+    plot = True
 
     # read test data
     obs_data_dict = datasets_raw[task_id][test_index]
@@ -49,13 +57,14 @@ def main():
     # preprocessing for the data
     obs_data_post_arr = ipromps_set[0].min_max_scaler.transform(obs_data)
     # consider the unobserved info
-    obs_data_post_arr[:, num_obs_joints:] = 0.0
+    obs_data_post_arr[:, num_obs_dim:] = 0.0
 
     # choose the data
+    ratio = 3
     num_obs = int(len(timestamp)*obs_ratio)
-    num_obs -= num_obs % 15
-    obs_data_post_arr = obs_data_post_arr[0:num_obs:15, :]
-    timestamp = timestamp[0:num_obs:15]
+    num_obs -= num_obs % ratio
+    obs_data_post_arr = obs_data_post_arr[0:num_obs:ratio, :]
+    timestamp = timestamp[0:num_obs:ratio]
     obs_data_post_arr = obs_data_post_arr
     timestamp = timestamp
 
@@ -81,27 +90,30 @@ def main():
         prob_task_temp = ipromp.prob_obs()
         prob_task.append(prob_task_temp)
     idx_max_prob = np.argmax(prob_task)
-    # idx_max_prob = 0 # a trick for testing
     print('The max fit model index is task %s' % task_name[idx_max_prob])
-
-    # # robot motion generation
-    # [traj_time, traj] = ipromps_set[idx_max_prob].gen_real_traj(alpha_max_list[idx_max_prob])
-    # traj = ipromps_set[idx_max_prob].min_max_scaler.inverse_transform(traj)
-    # robot_traj = traj[:, -3:]
 
     # robot motion generation
     traj_full = []
     for ipromp_id, ipromp in enumerate(ipromps_set):
         [traj_time, traj] = ipromp.gen_real_traj(alpha_max_list[ipromp_id])
         traj = ipromp.min_max_scaler.inverse_transform(traj)
-        robot_traj = traj[:, 11:17]
-        human_traj= traj[:, 0:11]
+        human_traj= traj[:, human_index[0]:human_index[-1]]
+        robot_traj = traj[:, robot_index[0]:robot_index[-1]]   
         traj_full.append([human_traj, robot_traj])
 
-    # # test: robot motion generation for task2
-    # [traj_time2, traj2] = ipromps_set[2].gen_real_traj(alpha_max_list[2])
-    # traj2 = ipromps_set[2].min_max_scaler.inverse_transform(traj2)
-    # robot_traj2 = traj2[:, -3:]
+    # if plot != None:
+    #     for task_idx, task in traj_full:
+    #         fig = plt.figure()
+    #         ax = fig.add_subplot( projection='3d')
+    #         human = task[0]
+    #         robot = task[1]
+    #         ipdb.set_trace()
+    #         ax.plot(human[:,0],human[:,1],human[:,2])
+    #         ax.plot(robot[:,0],robot[:,1],robot[:,2])
+    #     plt.show()
+
+
+
 
     # save the conditional result
     print('Saving the post IProMPs...')

@@ -26,7 +26,7 @@ datasets_norm = joblib.load(os.path.join(datasets_path, 'pkl/datasets_norm.pkl')
 datasets_filtered = joblib.load(os.path.join(datasets_path, 'pkl/datasets_filtered.pkl'))
 datasets_norm_preproc = joblib.load(os.path.join(datasets_path, 'pkl/datasets_norm_preproc.pkl'))
 task_name = joblib.load(os.path.join(datasets_path, 'pkl/task_name_list.pkl'))
-# [robot_traj_offline, ground_truth, num_obs] = joblib.load(os.path.join(datasets_path, 'pkl/robot_traj_offline.pkl'))
+[robot_traj_offline, ground_truth, num_obs] = joblib.load(os.path.join(datasets_path, 'pkl/robot_traj_offline.pkl'))
 # robot_traj_online = joblib.load(os.path.join(datasets_path, 'pkl/robot_traj_online.pkl'))
 # obs_data_online = joblib.load(os.path.join(datasets_path, 'pkl/obs_data_online.pkl'))
 
@@ -244,13 +244,26 @@ def plot_3d_filtered_h_traj(num=0):
         ax = fig.gca(projection='3d')
         for demo_idx in demo_list:
             data = datasets_filtered[task_idx][demo_idx]['left_hand']
-            ax.plot(data[:, 0], data[:, 1], data[:, 2], linewidth=2,
-                    # label='training sets about human '+str(demo_idx), alpha=0.3)
-                    alpha=0.8)
+            if demo_idx == 0:
+                    ax.plot(data[:, 0], data[:, 1], data[:, 2], linewidth=1,color="grey",
+                    label='Training dataset', alpha=1)
+            ax.plot(data[:, 0], data[:, 1], data[:, 2], linewidth=1,color="grey",
+                    alpha=1)
             ax.set_xlabel('X (m)')
             ax.set_ylabel('Y (m)')
             ax.set_zlabel('Z (m)')
-            ax.legend()
+
+# plot the 3d filtered robot traj
+def plot_3d_filtered_r_traj(num=0):
+    for task_idx, demo_list in enumerate(data_index):
+        fig = plt.figure(task_idx+num)
+        ax = fig.gca(projection='3d')
+        for demo_idx in demo_list:
+            data = datasets_filtered[task_idx][demo_idx]['left_joints']
+            # if demo_idx == 0:
+            #         ax.plot(data[:, 0], data[:, 1], data[:, 2],
+            #         linewidth=1, linestyle='-', alpha=1,label='Robot training dataset', color="grey")
+            ax.plot(data[:, 0], data[:, 1], data[:, 2], linewidth=1, linestyle='-', alpha=1, color="grey")
 
 
 # plot the offline obs
@@ -275,23 +288,6 @@ def plot_offline_3d_obs(num=0):
         # ax.legend(loc=2)
 
 
-# plot the 3d filtered robot traj
-def plot_3d_filtered_r_traj(num=0):
-    for task_idx, demo_list in enumerate(data_index):
-        fig = plt.figure(task_idx+num)
-        ax = fig.gca(projection='3d')
-        for demo_idx in demo_list:
-            data = datasets_filtered[task_idx][demo_idx]['left_joints']
-            ax.plot(data[:, 0], data[:, 1], data[:, 2],
-                    # linewidth=3, linestyle='-', label='training sets about robot '+str(demo_idx), alpha=0.3)
-                    linewidth=2, linestyle='-', alpha=0.8)
-            # ax.set_xlabel('X Label')
-            # ax.set_ylabel('Y Label')
-            # ax.set_zlabel('Z Label')
-            # ax.set_xlabel(u'X/米')
-            # ax.set_ylabel(u'Y/米')
-            # ax.set_zlabel(u'Z/米')
-            ax.legend()
 
 
 # plot the 3d generated robot traj
@@ -404,7 +400,7 @@ def plot_norm_result(num):
 def main():
     # conf_zh("Droid Sans Fallback")
     # plt.close('all')
-    plot_raw_data(0)
+    # plot_raw_data(0)
     # plot_norm_data(0)
     # plot_preproc_data(10)
     # plot_filtered_data(10)
@@ -421,7 +417,7 @@ def main():
     #3D
     # plot_3d_raw_traj(10)
     # plot_3d_gen_r_traj_online(10)
-    # pairs_offline(0)
+    pairs_offline(0)
     # pairs_online(10)
     plt.legend(prop = {'size': 20})
     plt.show()

@@ -224,9 +224,9 @@ class ProMP(object):
         '''
         for viapoint_id, viapoint in enumerate(self.viapoints):
             if viapoint_id == 0:
-                plt.plot(viapoint['t'], viapoint['obsy'], marker="o", markersize=15, color='gray', label='via points')
+                plt.plot(viapoint['t'], viapoint['obsy'], marker="o", markersize=15, color='red', label='via points')
             else:
-                plt.plot(viapoint['t'], viapoint['obsy'], marker="o", markersize=15, color='gray')
+                plt.plot(viapoint['t'], viapoint['obsy'], marker="o", markersize=15, color='red')
             # plt.errorbar(viapoint['t'], viapoint['obsy'], yerr=self.sigmay, fmt='o', markersize=15)
 
     def plot_nUpdated(self, legend='', color='b', via_show=True, alpha_std=0.4, mean_line_width=3):
