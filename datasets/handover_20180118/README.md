@@ -1,2 +1,0 @@
-# specification
-I collect this data sets to test the human skeleton tracking performance. The main problem is the vision occlusion when the robot get closed to the human hand. It seems that tracking node treat the robot arm as one part of the human hand so there is a big jump. 

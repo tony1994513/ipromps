@@ -1,1 +1,0 @@
-There are strong vision occlusion in this dataset. 

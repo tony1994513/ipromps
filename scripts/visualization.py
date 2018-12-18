@@ -26,7 +26,7 @@ datasets_norm = joblib.load(os.path.join(datasets_path, 'pkl/datasets_norm.pkl')
 datasets_filtered = joblib.load(os.path.join(datasets_path, 'pkl/datasets_filtered.pkl'))
 datasets_norm_preproc = joblib.load(os.path.join(datasets_path, 'pkl/datasets_norm_preproc.pkl'))
 task_name = joblib.load(os.path.join(datasets_path, 'pkl/task_name_list.pkl'))
-[robot_traj_offline, ground_truth, num_obs] = joblib.load(os.path.join(datasets_path, 'pkl/robot_traj_offline.pkl'))
+# [robot_traj_offline, ground_truth, num_obs] = joblib.load(os.path.join(datasets_path, 'pkl/robot_traj_offline.pkl'))
 # robot_traj_online = joblib.load(os.path.join(datasets_path, 'pkl/robot_traj_online.pkl'))
 # obs_data_online = joblib.load(os.path.join(datasets_path, 'pkl/obs_data_online.pkl'))
 
@@ -38,14 +38,15 @@ cp_datasets.read(os.path.join(datasets_path, 'info/cfg/datasets.cfg'))
 data_index_sec = cp_datasets.items('index_17')
 data_index = [map(int, task[1].split(',')) for task in data_index_sec]
 
-# the idx of interest info in data structure
-# info_n_idx = {
-#             'left_hand': [0, 11],
-#             'left_joints': [11, 14]
-#             }
+# after processed human/robot index
+human_index = cp_models.get('processed_index', 'human')
+robot_index = cp_models.get('processed_index', 'robot')
+human_index =  [int(x.strip()) for x in human_index.split(',')]
+robot_index =  [int(x.strip()) for x in robot_index.split(',')]
+
 info_n_idx = {
-            'left_hand': [0, 11],
-            'left_joints': [11, 18]
+            'left_hand': human_index,
+            'left_joints': robot_index,
             }
 # the info to be plotted
 info = cp_models.get('visualization', 'info')
@@ -403,7 +404,7 @@ def plot_norm_result(num):
 def main():
     # conf_zh("Droid Sans Fallback")
     # plt.close('all')
-    # plot_raw_data(0)
+    plot_raw_data(0)
     # plot_norm_data(0)
     # plot_preproc_data(10)
     # plot_filtered_data(10)
@@ -420,9 +421,9 @@ def main():
     #3D
     # plot_3d_raw_traj(10)
     # plot_3d_gen_r_traj_online(10)
-    pairs_offline(0)
+    # pairs_offline(0)
     # pairs_online(10)
-    # plt.legend(prop = {'size': 20})
+    plt.legend(prop = {'size': 20})
     plt.show()
 
 

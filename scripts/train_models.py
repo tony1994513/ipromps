@@ -14,8 +14,8 @@ cp_models = ConfigParser.SafeConfigParser()
 cp_models.read(os.path.join(file_path, '../cfg/models.cfg'))
 # read models params
 datasets_path = os.path.join(file_path, cp_models.get('datasets', 'path'))
-num_joints = cp_models.getint('datasets', 'num_joints')
-num_obs_joints = cp_models.getint('datasets', 'num_obs_joints')
+num_dim = cp_models.getint('datasets', 'num_dim')
+num_obs_dim = cp_models.getint('datasets', 'num_obs_dim')
 len_norm = cp_models.getint('datasets', 'len_norm')
 num_basis = cp_models.getint('basisFunc', 'num_basisFunc')
 sigma_basis = cp_models.getfloat('basisFunc', 'sigma_basisFunc')
@@ -37,7 +37,7 @@ def main():
     noise_cov = joblib.load(noise_cov_path)
 
     # create iProMPs sets
-    ipromps_set = [ipromps_lib.IProMP(num_joints=num_joints, num_obs_joints=num_obs_joints, num_basis=num_basis,
+    ipromps_set = [ipromps_lib.IProMP(num_joints=num_dim, num_obs_joints=num_obs_dim, num_basis=num_basis,
                                       sigma_basis=sigma_basis, num_samples=len_norm, sigmay=noise_cov,
                                       min_max_scaler=min_max_scaler, num_alpha_candidate=num_alpha_candidate)
                    for x in datasets_norm_preproc]
