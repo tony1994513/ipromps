@@ -41,7 +41,7 @@ robot_index =  [int(x.strip()) for x in robot_index.split(',')]
 def main():
     task_id = 0
     test_index = 8
-    obs_ratio = 0.4
+    obs_ratio = 0.6
     plot = True
 
     # read test data
@@ -60,14 +60,15 @@ def main():
     obs_data_post_arr[:, num_obs_dim:] = 0.0
 
     # choose the data
-    ratio = 3
+    start_idx = 40
+    ratio = 5
     num_obs = int(len(timestamp)*obs_ratio)
     num_obs -= num_obs % ratio
-    obs_data_post_arr = obs_data_post_arr[0:num_obs:ratio, :]
-    timestamp = timestamp[0:num_obs:ratio]
+    obs_data_post_arr = obs_data_post_arr[start_idx:num_obs:ratio, :]
+    timestamp = timestamp[start_idx:num_obs:ratio]
     obs_data_post_arr = obs_data_post_arr
     timestamp = timestamp
-
+    # ipdb.set_trace()
     # phase estimation
     print('Phase estimating...')
     alpha_max_list = []

@@ -234,29 +234,29 @@ def plot_3d_raw_traj(num=0):
                 ax.set_xlabel('X Label')
                 ax.set_ylabel('Y Label')
                 ax.set_zlabel('Z Label')
-                ax.legend()
 
 
 # plot the 3d filtered traj
 def plot_3d_filtered_h_traj(num=0):
     for task_idx, demo_list in enumerate(data_index):
-        fig = plt.figure(task_idx+num)
+        fig = plt.figure(task_idx+num,figsize=(8, 6), dpi=80, facecolor='w', edgecolor='w')
         ax = fig.gca(projection='3d')
         for demo_idx in demo_list:
             data = datasets_filtered[task_idx][demo_idx]['left_hand']
             if demo_idx == 0:
                     ax.plot(data[:, 0], data[:, 1], data[:, 2], linewidth=1,color="grey",
-                    label='Training dataset', alpha=1)
+                    label='Model sample', alpha=1)
             ax.plot(data[:, 0], data[:, 1], data[:, 2], linewidth=1,color="grey",
                     alpha=1)
-            ax.set_xlabel('X (m)')
-            ax.set_ylabel('Y (m)')
-            ax.set_zlabel('Z (m)')
+        ax.set_xlabel('X (m)',fontsize=15)
+        ax.set_ylabel('Y (m)',fontsize=15)
+        ax.set_zlabel('Z (m)',fontsize=15)
+        # ax.legend(fontsize=20)
 
 # plot the 3d filtered robot traj
 def plot_3d_filtered_r_traj(num=0):
     for task_idx, demo_list in enumerate(data_index):
-        fig = plt.figure(task_idx+num)
+        fig = plt.figure(task_idx+num,figsize=(8, 6), dpi=80, facecolor='w', edgecolor='w')
         ax = fig.gca(projection='3d')
         for demo_idx in demo_list:
             data = datasets_filtered[task_idx][demo_idx]['left_joints']
@@ -264,48 +264,48 @@ def plot_3d_filtered_r_traj(num=0):
             #         ax.plot(data[:, 0], data[:, 1], data[:, 2],
             #         linewidth=1, linestyle='-', alpha=1,label='Robot training dataset', color="grey")
             ax.plot(data[:, 0], data[:, 1], data[:, 2], linewidth=1, linestyle='-', alpha=1, color="grey")
+        # ax.legend(fontsize=20)
 
 
+start_idx = 40
+ratio = 5
 # plot the offline obs
 def plot_offline_3d_obs(num=0):
     for task_idx, demo_list in enumerate(data_index):
-        fig = plt.figure(task_idx + num)
+        fig = plt.figure(task_idx + num,figsize=(8, 6), dpi=80, facecolor='w', edgecolor='w')
         ax = fig.gca(projection='3d')
         obs_data_dict = ground_truth
         data = obs_data_dict['left_hand']
-        ax.plot(data[0:num_obs:15, 0], data[0:num_obs:15, 1], data[0:num_obs:15, 2],
+        ax.plot(data[start_idx:num_obs:ratio, 0], data[start_idx:num_obs:ratio, 1], data[start_idx:num_obs:ratio, 2],
                 'o', markersize=10, label='Human motion observations', alpha=1.0,
-                markerfacecolor='none', markeredgewidth=3.0, markeredgecolor='g')
+                markerfacecolor='none', markeredgewidth=1.0, markeredgecolor='r')
         ax.plot(data[:, 0], data[:, 1], data[:, 2],
-                '-', linewidth=5, color='blue', label='Human trajectory ground truth', alpha = 1.0)
+                '-', linewidth=2, color='r', label='Ground truth', alpha = 1.0)
         data = ground_truth['left_joints']
-        # import ipdb;ipdb.set_trace()
-        ax.plot(data[:, -7], data[:, -6], data[:, -5],
-                linewidth=5, linestyle='-', color='r', label='Robot trajectory ground Truth', alpha=1.0)
-        ax.set_xlabel('X (m)')
-        ax.set_ylabel('Y (m)')
-        ax.set_zlabel('Z (m)')
-        # ax.legend(loc=2)
-
-
-
+        ax.plot(data[:, 0], data[:, 1], data[:, 2],
+                linewidth=2, linestyle='-', color='r', alpha=1.0)
+        # ax.legend(fontsize=20)
 
 # plot the 3d generated robot traj
-def plot_gen_3d_offline_r_traj(num=0):
+def plot_gen_3d_offline_r_traj(num=0,figsize=(8, 6), dpi=80, facecolor='w', edgecolor='w'):
     for task_idx, demo_list in enumerate(data_index):
         fig = plt.figure(task_idx+num)
         ax = fig.gca(projection='3d')
         data = robot_traj_offline[task_idx][1]
-        ax.plot(data[:, 0], data[:, 1], data[:, 2], 'r',
-                linewidth=5, linestyle='--', label='Predicted robot trajectory')
+        ax.plot(data[:, 0], data[:, 1], data[:, 2], 'b',
+                linewidth=2, linestyle='-', label='Predicted mean')
         data = robot_traj_offline[task_idx][0]
         ax.plot(data[:, 0], data[:, 1], data[:, 2], 'b',
-                linewidth=5, linestyle='--', label='Predicted human trajectory')
+                linewidth=2, linestyle='-')
+        ax.legend(fontsize=20)
 
-        ax.set_xlabel('X (m)')
-        ax.set_ylabel('Y (m)')
-        ax.set_zlabel('Z (m)')
-        ax.legend(loc=0)
+# plot offline test pair
+def pairs_offline(num=0):
+    plot_3d_filtered_h_traj(num)
+    plot_3d_filtered_r_traj(num)
+    plot_offline_3d_obs(num)
+    plot_gen_3d_offline_r_traj(num)
+
 
 
 # plot the 3d generated robot traj
@@ -316,10 +316,12 @@ def plot_gen_3d_online_r_traj(num=0):
         data = robot_traj_online
         ax.plot(data[:, 0], data[:, 1], data[:, 2],
                 linewidth=8, linestyle='-', label='generated online robot traj', alpha=0.2)
-        ax.set_xlabel('X Label')
-        ax.set_ylabel('Y Label')
-        ax.set_zlabel('Z Label')
-        ax.legend()
+        plt.xlabel('X (m)')
+        plt.ylabel('Y (m)')
+        plt.zlabel('Z (m)')
+
+
+
 
 
 def plot_online_3d_obs(num):
@@ -332,15 +334,10 @@ def plot_online_3d_obs(num):
         ax.set_xlabel('X (m)')
         ax.set_ylabel('Y (m)')
         ax.set_zlabel('Z (m)')
-        ax.legend()
 
 
-# plot offline test pair
-def pairs_offline(num=0):
-    plot_3d_filtered_h_traj(num)
-    plot_3d_filtered_r_traj(num)
-    plot_offline_3d_obs(num)
-    plot_gen_3d_offline_r_traj(num)
+
+
 
 
 # plot online test pair
@@ -415,11 +412,12 @@ def main():
     # plot_norm_result(10)
 
     #3D
-    # plot_3d_raw_traj(10)
+    plot_3d_raw_traj(10)
     # plot_3d_gen_r_traj_online(10)
-    pairs_offline(0)
+    # pairs_offline(0)
     # pairs_online(10)
-    plt.legend(prop = {'size': 20})
+    plt.yticks(fontsize=15)
+    plt.xticks(fontsize=15)
     plt.show()
 
 

@@ -6,6 +6,7 @@ import os
 import ConfigParser
 import matplotlib.pyplot as plt
 
+
 # read conf file
 file_path = os.path.dirname(__file__)
 cp_models = ConfigParser.SafeConfigParser()
@@ -17,8 +18,8 @@ task_name = joblib.load(os.path.join(datasets_path, 'pkl/task_name_list.pkl'))
 
 
 def ee_error_n_recog_accuracy():
-    num_alpha_candidate = 6
-    obs_ratio_list = [0.1, 0.2, 0.3, 0.4, 0.5]
+    num_alpha_candidate = 10
+    obs_ratio_list = [0.3,0.9]
     result_full_full = []
     for obs_ratio in obs_ratio_list:
         print '---------------------------'
@@ -38,6 +39,7 @@ def ee_error_n_recog_accuracy():
             mean = np.mean(arr)
             print 'the mean for ' + name + ' is %f' % mean
             print 'the variance for ' + name + ' is %f' % var
+            print '---------------------------'
     joblib.dump(result_full_full, os.path.join(datasets_path, 'pkl/ee_error_n_recog_accuracy_with_emg.pkl'))
 
 
@@ -147,7 +149,7 @@ def draw_all_positioning_error():
 
 
 def main():
-    # ee_error_n_recog_accuracy()
+    ee_error_n_recog_accuracy()
     # phase_error()
     # draw_phase_error()
     # draw_positioning_error()

@@ -206,6 +206,7 @@ def main():
     datasets_norm_preproc = []
     for task_idx in range(len(datasets4train)):
         datasets_temp = []
+        # ipdb.set_trace()
         for demo_idx in range(num_demo):
             temp = datasets_norm_full[(task_idx * num_demo + demo_idx) * len_norm:
             (task_idx * num_demo + demo_idx) * len_norm + len_norm, :]

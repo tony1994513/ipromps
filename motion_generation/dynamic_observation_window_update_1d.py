@@ -70,7 +70,6 @@ def main():
     obs_ratio_time_2 = np.array([0.3,0.6,0.9])
     obs_ratio_time = np.column_stack((obs_ratio_time_1,obs_ratio_time_2))
 
-
     # read test data
     obs_data_dict = datasets_raw[task_id][test_index]
 
@@ -93,7 +92,6 @@ def main():
     phase_2 = deque()
     phase_3 = deque()
 
-
     # sparse human observation data
     for obs_idx,obs_ratio in enumerate(obs_ratio_time):
         obs_ratio_1 = int(obs_ratio_time[obs_idx][0] * len(obs_data_post_arr))
@@ -105,7 +103,6 @@ def main():
         sampled_list = np.linspace(obs_ratio_1,obs_ratio_2,3).astype("int")
         obs_data_post_arr =obs_data_post_arr[sampled_list,:]
         timestamp = timestamp[sampled_list]
-
 
         # phase estimation
         print('Phase estimating...')
@@ -141,6 +138,7 @@ def main():
         num_of_point = (obs_ratio_time_2[obs_idx] - obs_ratio_time_1[obs_idx])*100 
 
         phase_increase ,phase_decrease = sigmoid(obs_ratio_time_1[obs_idx],obs_ratio_time_2[obs_idx],num_of_point)
+        
         if obs_idx == 0:
             phase_0.append(phase_decrease)
             phase_1.append(phase_increase)
