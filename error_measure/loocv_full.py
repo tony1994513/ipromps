@@ -24,20 +24,20 @@ def ee_error_n_recog_accuracy():
         print '---------------------------'
         result_full = []
         for task_id, name in enumerate(task_name):
-            print 'testing the '+ name + 'with obs_ratio %f' % obs_ratio
+            print 'testing the '+ name + ' th obs_ratio %f' % obs_ratio
             [error_full, acc, phase_error_full] = loocv_ee_error.main(obs_ratio, task_id, num_alpha_candidate)
             result_full.append([error_full, acc, phase_error_full])
         result_full_full.append(result_full)
 
         for id, name in enumerate(task_name):
-            print 'the accuracy for ' + name + 'is %f' % result_full[id][1]
+            print 'the accuracy for ' + name + ' is %f' % result_full[id][1]
         for id, name in enumerate(task_name):
             print '---------------------------'
             arr = np.array(result_full[id][0])
             var = np.var(arr)
             mean = np.mean(arr)
-            print 'the mean for ' + name + 'is %f' % mean
-            print 'the variance for ' + name + 'is %f' % var
+            print 'the mean for ' + name + ' is %f' % mean
+            print 'the variance for ' + name + ' is %f' % var
     joblib.dump(result_full_full, os.path.join(datasets_path, 'pkl/ee_error_n_recog_accuracy_with_emg.pkl'))
 
 
@@ -151,7 +151,7 @@ def main():
     # phase_error()
     # draw_phase_error()
     # draw_positioning_error()
-    draw_all_positioning_error()
+    # draw_all_positioning_error()
     # draw_all_phase_error()
 
 if __name__ == '__main__':

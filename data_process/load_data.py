@@ -33,13 +33,11 @@ sigma = cp_models.getint('filter', 'sigma')
 # read csv params
 emg_index = cp_models.get('csv_parse', 'emg')
 leftHand_index = cp_models.get('csv_parse', 'left_hand')
-leftJointCart_index = cp_models.get('csv_parse', 'left_joints_cart')
 leftJoint_index = cp_models.get('csv_parse', 'left_joints')
 
 # process csv params
 emg_index =  [int(x.strip()) for x in emg_index.split(',')]
 leftHand_index =  [int(x.strip()) for x in leftHand_index.split(',')]
-leftJointCart_index =  [int(x.strip()) for x in leftJointCart_index.split(',')]
 leftJoint_index =  [int(x.strip()) for x in leftJoint_index.split(',')]
 
 # read datasets cfg file
@@ -57,8 +55,8 @@ robot_index =  [int(x.strip()) for x in robot_index.split(',')]
 
 
 human_dim = leftHand_index[-1] - leftHand_index[0]
-robot_joint_dim = leftJoint_index[-1] - leftJoint_index[0]
-robot_cart_dim = leftJointCart_index[-1] - leftJointCart_index[0]
+robot_dim = leftJoint_index[-1] - leftJoint_index[0]
+
 
 print("dataset path : %s " %datasets_path)
 print("length of norm : %s " %len_norm)
@@ -68,11 +66,9 @@ print("filter sigma : %s" %sigma)
 print("-----------")
 print("emg index : %s" %emg_index)
 print("human csv index : %s" %leftHand_index)
-print("robot csv jointspace index : %s" %leftJoint_index)
-print("robot csv cartesian index : %s" %leftJointCart_index)
+print("robot csv  index : %s" %leftJoint_index)
 print("human dimension : %s" %human_dim)
-print("robot joint dimension : %s" %robot_joint_dim)
-print("human cartesion dimension : %s" %robot_cart_dim)
+print("robot dimension : %s" %robot_dim)
 print("-----------")
 print("human index: %s" %human_index )
 print("robot index: %s" %robot_index )
@@ -123,7 +119,7 @@ def main():
             left_joints_csv_t = np.array((left_joints_csv.values[:,2] - left_joints_csv.values[0,2])*1e-9).astype("float")
 
             left_hand = left_hand_csv.values[:, leftHand_index[0]:leftHand_index[-1]].astype(float)
-            left_joints = left_joints_csv.values[:, leftJointCart_index[0]:leftJointCart_index[-1]].astype(float)
+            left_joints = left_joints_csv.values[:, leftJoint_index[0]:leftJoint_index[-1]].astype(float)
 
             lenth = len(left_hand)
 
@@ -132,7 +128,7 @@ def main():
 
             resample_t = np.linspace(0.0, t_end, lenth)
             left_hand_resampled = [None] * human_dim
-            left_joints_resampled = [None] * robot_cart_dim
+            left_joints_resampled = [None] * robot_dim
             for idx  in range(left_hand.shape[1]):
                 left_hand_resampled[idx] = np.interp(resample_t, left_hand_csv_t, left_hand[:,idx])
 

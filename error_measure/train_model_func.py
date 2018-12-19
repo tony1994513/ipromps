@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import numpy as np
-import ipromps_lib
+from ipromps import ipromps_lib
 from sklearn.externals import joblib
 import os
 import ConfigParser
@@ -14,8 +14,8 @@ cp_models = ConfigParser.SafeConfigParser()
 cp_models.read(os.path.join(file_path, '../cfg/models.cfg'))
 # read models params
 datasets_path = os.path.join(file_path, cp_models.get('datasets', 'path'))
-num_joints = cp_models.getint('datasets', 'num_joints')
-num_obs_joints = cp_models.getint('datasets', 'num_obs_joints')
+num_joints = cp_models.getint('datasets', 'num_dim')
+num_obs_joints = cp_models.getint('datasets', 'num_obs_dim')
 len_norm = cp_models.getint('datasets', 'len_norm')
 num_basis = cp_models.getint('basisFunc', 'num_basisFunc')
 sigma_basis = cp_models.getfloat('basisFunc', 'sigma_basisFunc')

@@ -17,7 +17,8 @@ num_alpha_candidate = cp_models.getint('phase', 'num_phaseCandidate')
 task_name_path = os.path.join(datasets_path, 'pkl/task_name_list.pkl')
 task_name = joblib.load(task_name_path)
 sigma = cp_models.get('filter', 'sigma')
-num_joints = cp_models.getint('datasets', 'num_joints')
+num_joints = cp_models.getint('datasets', 'num_dim')
+num_obs_dim = cp_models.getint('datasets', 'num_obs_dim')
 datasets_pkl_path = os.path.join(datasets_path, 'pkl')
 datasets_raw_path = os.path.join(datasets_pkl_path, 'datasets_raw.pkl')
 datasets_filtered_path = os.path.join(datasets_pkl_path, 'datasets_filtered.pkl')
@@ -28,14 +29,14 @@ datasets_norm_preproc_path = os.path.join(datasets_pkl_path, 'datasets_norm_prep
 cp_datasets = ConfigParser.SafeConfigParser()
 cp_datasets.read(os.path.join(datasets_path, './info/cfg/datasets.cfg'))
 # read datasets params
-# data_index_sec = cp_datasets.items('index_15')
+
 data_index_sec = cp_datasets.items('index_17')
 data_index = [map(int, task[1].split(',')) for task in data_index_sec]
 
 
 def main(ipromps_set, test_index, obs_ratio, task_id, num_alpha_candidate):
     datasets_raw = joblib.load(datasets_raw_path)
-    # datasets_filtered = joblib.load(datasets_filtered_path)
+    datasets_filtered = joblib.load(datasets_filtered_path)
     datasets_norm_preproc = joblib.load(datasets_norm_preproc_path)
 
     obs_data_dict = datasets_raw[task_id][data_index[task_id][test_index[0]]]
@@ -50,12 +51,16 @@ def main(ipromps_set, test_index, obs_ratio, task_id, num_alpha_candidate):
     # preprocessing for the data
     obs_data_post_arr = ipromps_set[0].min_max_scaler.transform(obs_data)
     # consider the unobserved info
-    obs_data_post_arr[:, -3:] = 0.0
+    obs_data_post_arr[:, num_obs_dim:] = 0.0
 
     # choose the data
-    num_obs = int(obs_ratio*len(timestamp))
-    obs_data_post_arr = obs_data_post_arr[0:num_obs, :]
-    timestamp = timestamp[0:num_obs]
+    ratio = 3
+    num_obs = int(len(timestamp)*obs_ratio)
+    num_obs -= num_obs % ratio
+    obs_data_post_arr = obs_data_post_arr[0:num_obs:ratio, :]
+    timestamp = timestamp[0:num_obs:ratio]
+    obs_data_post_arr = obs_data_post_arr
+    timestamp = timestamp
 
     # phase estimation
     alpha_max_list = []
@@ -84,7 +89,7 @@ def main(ipromps_set, test_index, obs_ratio, task_id, num_alpha_candidate):
     [traj_time, traj] = ipromps_set[task_id].gen_real_traj(alpha_max_list[task_id])
     traj = ipromps_set[task_id].min_max_scaler.inverse_transform(traj)
 
-    robot_traj = traj[:, -3:]
+    robot_traj = traj[:, num_obs_dim:]
     ground_truth = datasets_raw[task_id][data_index[task_id][test_index[0]]]['left_joints']
     positioning_error = np.sqrt(np.sum(np.square(robot_traj[-1,:] - ground_truth[-1,:])))
     phase_error = alpha_max_list[task_id] - datasets_norm_preproc[task_id][test_index[0]]['alpha']

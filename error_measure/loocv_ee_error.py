@@ -2,7 +2,7 @@
 import train_model_func
 from sklearn.model_selection import LeaveOneOut
 import numpy as np
-import ipromps_lib
+from ipromps import ipromps_lib
 from sklearn.externals import joblib
 import os
 import ConfigParser

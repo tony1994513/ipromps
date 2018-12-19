@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import numpy as np
-import ipromps_lib
+from ipromps import ipromps_lib
 from sklearn.externals import joblib
 import os
 import ConfigParser

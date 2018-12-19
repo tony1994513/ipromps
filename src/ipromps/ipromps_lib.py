@@ -514,14 +514,19 @@ class IProMP(NDProMP):
             self.promps[joint_demo].add_viapoint(t, obsys[joint_demo])
         self.viapoints.append({'t': t, 'obsy': obsys})
 
-    def param_update(self, unit_update):
+    def param_update(self, unit_update,update_time=0):
         """
         updated the mean and sigma of w by the via points
         :param unit_update: the bool option for
         :return:
         """
-        new_meanW_full = self.meanW_full
-        new_covW_full = self.covW_full
+        if update_time == 0:
+            new_meanW_full = self.meanW_full
+            new_covW_full = self.covW_full
+        else:
+            new_meanW_full = self.meanW_full_updated
+            new_covW_full = self.covW_full_updated
+            
         for viapoint in self.viapoints:
             h_full = self.obs_mat(viapoint['t'])
             # the observation of specific time
@@ -542,6 +547,7 @@ class IProMP(NDProMP):
                 self.promps[i].meanW_nUpdated = new_meanW_full.reshape([self.num_joints, self.num_basis]).T[:, i]
                 self.promps[i].sigmaW_nUpdated = new_covW_full[i * self.num_basis:(1 + i) * self.num_basis,
                                              i * self.num_basis:(i + 1) * self.num_basis]
+
 
     def gen_nTrajectory(self, randomness=1e-10):
         """

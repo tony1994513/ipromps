@@ -17,13 +17,11 @@ min_max_scaler = joblib.load(min_max_scaler_path)
 # read csv params
 emg_index = cp_models.get('csv_parse', 'emg')
 leftHand_index = cp_models.get('csv_parse', 'left_hand')
-leftJointCart_index = cp_models.get('csv_parse', 'left_joints_cart')
 leftJoint_index = cp_models.get('csv_parse', 'left_joints')
 
 # process csv params
 emg_index =  [int(x.strip()) for x in emg_index.split(',')]
 leftHand_index =  [int(x.strip()) for x in leftHand_index.split(',')]
-leftJointCart_index =  [int(x.strip()) for x in leftJointCart_index.split(',')]
 leftJoint_index =  [int(x.strip()) for x in leftJoint_index.split(',')]
 
 
@@ -35,7 +33,7 @@ def main():
     # extract the all signals data ORIENTATION
     # emg = data.values[:, 7:15].astype(float)
     left_hand = data.values[:, leftHand_index[0]:leftHand_index[-1]].astype(float)
-    left_joints = data.values[:, leftJointCart_index[0]:leftJointCart_index[-1]].astype(float)  # robot ee actually
+    left_joints = data.values[:, leftJoint_index[0]:leftJoint_index[-1]].astype(float)  # robot ee actually
 
     # stack them as a big matrix
     full_data = np.hstack([left_hand, left_joints])[1200:, :]
