@@ -66,8 +66,8 @@ def main():
     task_id = 2
     test_index = 4
 
-    obs_ratio_time_1 = np.array([0.0,0.3,0.6])
-    obs_ratio_time_2 = np.array([0.3,0.6,0.9])
+    obs_ratio_time_1 = np.array([0.0,0.2,0.4,0.6,0.8])
+    obs_ratio_time_2 = np.array([0.2,0.4,0.6,0.8,1.0])
     obs_ratio_time = np.column_stack((obs_ratio_time_1,obs_ratio_time_2))
 
     # read test data
@@ -96,6 +96,7 @@ def main():
     for obs_idx,obs_ratio in enumerate(obs_ratio_time):
         obs_ratio_1 = int(obs_ratio_time[obs_idx][0] * len(obs_data_post_arr))
         obs_ratio_2 = int(obs_ratio_time[obs_idx][1] * len(obs_data_post_arr))
+        # sample data
         tmp = obs_ratio_2 % 3
         if tmp == 0:
             obs_ratio_2 = obs_ratio_2 -tmp - 1
@@ -128,6 +129,7 @@ def main():
         idx_max_prob = np.argmax(prob_task)
         print('The max fit model index is task %s' % task_name[idx_max_prob])
 
+        #####################
 
         robot_promps = ipromps_set[idx_max_prob].promps[3]
        
@@ -136,7 +138,7 @@ def main():
         meanW_nUpdated = robot_promps.meanW_nUpdated   
         sigmaW_nUpdated = robot_promps.sigmaW_nUpdated
         num_of_point = (obs_ratio_time_2[obs_idx] - obs_ratio_time_1[obs_idx])*100 
-
+        ipdb.set_trace()
         phase_increase ,phase_decrease = sigmoid(obs_ratio_time_1[obs_idx],obs_ratio_time_2[obs_idx],num_of_point)
         
         if obs_idx == 0:
@@ -155,8 +157,13 @@ def main():
         
 
         if obs_idx == 0:
+            
             meanW0 = robot_promps.meanW
             sigmaW0 = robot_promps.sigmaW
+            # sigma3 = inv(inv(sigmaW0)+ inv(sigmaW_nUpdated))
+            # mean3 = np.dot(np.dot(sigma3, inv(sigmaW0)),meanW0) + np.dot(np.dot(sigma3, inv(sigmaW_nUpdated)),meanW_nUpdated)
+            # ipdb.set_trace()
+
             mean0 = np.dot(Phi.T,meanW0)
             std0 = 2 * np.sqrt(np.diag(np.dot(Phi.T, np.dot(sigmaW0, Phi))))
 
