@@ -287,7 +287,7 @@ def plot_offline_3d_obs(num=0):
         # ax.legend(fontsize=20)
 
 # plot the 3d generated robot traj
-def plot_gen_3d_offline_r_traj(num=0,figsize=(8, 6), dpi=80, facecolor='w', edgecolor='w'):
+def plot_gen_3d_offline_r_traj(num=0,figsize=(8, 6), dpi=300, facecolor='w', edgecolor='w'):
     for task_idx, demo_list in enumerate(data_index):
         fig = plt.figure(task_idx+num)
         ax = fig.gca(projection='3d')
@@ -412,12 +412,14 @@ def main():
     # plot_norm_result(10)
 
     #3D
-    plot_3d_raw_traj(10)
+    # plot_3d_raw_traj(10)
     # plot_3d_gen_r_traj_online(10)
-    # pairs_offline(0)
+    pairs_offline(0)
     # pairs_online(10)
+
     plt.yticks(fontsize=15)
     plt.xticks(fontsize=15)
+    plt.savefig('fig3',format='eps')
     plt.show()
 
 
