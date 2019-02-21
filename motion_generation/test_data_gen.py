@@ -77,7 +77,7 @@ def main():
         idx_max = ipromp.estimate_alpha(alpha_temp, obs_data_post_arr, timestamp)
         alpha_max_list.append(alpha_temp[idx_max]['candidate'])
         ipromp.set_alpha(alpha_temp[idx_max]['candidate'])
-
+    ipdb.set_trace()
     # task recognition
     print('Adding via points in each trained model...')
     for task_idx, ipromp in enumerate(ipromps_set):

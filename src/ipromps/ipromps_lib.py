@@ -282,13 +282,13 @@ class NDProMP(object):
         :param t: the specific time
         :return: the observation mat
         """
-        h = np.exp(-.5 * (np.array(map(lambda x: x - self.C,
+        bf = np.exp(-.5 * (np.array(map(lambda x: x - self.C,
                                        np.tile(t, (self.num_basis, 1)).T)).T**2 / (self.sigma_basis**2)))
-        h_full = np.array([]).reshape(0,0)
+        bf_full = np.array([]).reshape(0,0)
         # construct the obs mat
         for idx_obs in range(self.num_joints):
-            h_full = scipy.linalg.block_diag(h_full, h.T)
-        return h_full
+            bf_full = scipy.linalg.block_diag(bf_full, bf.T)
+        return bf_full
 
     def add_demonstration(self, demonstration):
         """
@@ -405,14 +405,14 @@ class NDProMP(object):
         new_meanW_full = self.meanW_full
         new_covW_full = self.covW_full
         for viapoint in self.viapoints:
-            h_full = self.obs_mat(viapoint['t'])
+            bf_full = self.obs_mat(viapoint['t'])
             # the observation of specific time
             y_observed = viapoint['obsy'].reshape([self.num_joints, 1])
             # update the distribution
-            aux = self.sigmay + np.dot(h_full, np.dot(new_covW_full, h_full.T))
-            K = np.dot(np.dot(new_covW_full, h_full.T), np.linalg.inv(aux))
-            new_meanW_full = new_meanW_full + np.dot(K, y_observed - np.dot(h_full, new_meanW_full))
-            new_covW_full = new_covW_full - np.dot(K, np.dot(h_full, new_covW_full))
+            aux = self.sigmay + np.dot(bf_full, np.dot(new_covW_full, bf_full.T))
+            K = np.dot(np.dot(new_covW_full, bf_full.T), np.linalg.inv(aux))
+            new_meanW_full = new_meanW_full + np.dot(K, y_observed - np.dot(bf_full, new_meanW_full))
+            new_covW_full = new_covW_full - np.dot(K, np.dot(bf_full, new_covW_full))
 
         # save the updated distribution for ndpromp
         self.meanW_full_updated = new_meanW_full
@@ -489,16 +489,16 @@ class IProMP(NDProMP):
         :param t: the specific time
         :return: the observation mat
         """
-        h = np.exp(-.5 * (np.array(map(lambda x: x - self.C,
+        bf = np.exp(-.5 * (np.array(map(lambda x: x - self.C,
                       np.tile(t, (self.num_basis, 1)).T)).T**2 / (self.sigma_basis ** 2)))
         zero_entry = np.zeros([1, self.num_basis])
-        h_full = np.array([]).reshape(0,0)
+        bf_full = np.array([]).reshape(0,0)
         # construct the obs mat
         for idx_obs in range(self.num_obs_joints):
-            h_full = scipy.linalg.block_diag(h_full, h.T)
+            bf_full = scipy.linalg.block_diag(bf_full, bf.T)
         for idx_non_obs in range(self.num_joints - self.num_obs_joints):
-            h_full = scipy.linalg.block_diag(h_full, zero_entry)
-        return h_full
+            bf_full = scipy.linalg.block_diag(bf_full, zero_entry)
+        return bf_full
 
     def add_viapoint(self, t, obsys):
         """
@@ -528,14 +528,14 @@ class IProMP(NDProMP):
             new_covW_full = self.covW_full_updated
             
         for viapoint in self.viapoints:
-            h_full = self.obs_mat(viapoint['t'])
+            bf_full = self.obs_mat(viapoint['t'])
             # the observation of specific time
             y_observed = viapoint['obsy'].reshape([self.num_joints, 1])
             # update the distribution
-            aux = self.sigmay + np.dot(h_full, np.dot(new_covW_full, h_full.T))
-            K = np.dot(np.dot(new_covW_full, h_full.T), np.linalg.inv(aux))
-            new_meanW_full = new_meanW_full + np.dot(K, y_observed - np.dot(h_full, new_meanW_full))
-            new_covW_full = new_covW_full - np.dot(K, np.dot(h_full, new_covW_full))
+            aux = self.sigmay + np.dot(bf_full, np.dot(new_covW_full, bf_full.T))
+            K = np.dot(np.dot(new_covW_full, bf_full.T), np.linalg.inv(aux))
+            new_meanW_full = new_meanW_full + np.dot(K, y_observed - np.dot(bf_full, new_meanW_full))
+            new_covW_full = new_covW_full - np.dot(K, np.dot(bf_full, new_covW_full))
 
         # save the updated distribution for ipromp
         self.meanW_full_updated = new_meanW_full
@@ -566,10 +566,10 @@ class IProMP(NDProMP):
         """
         prob_full = 0.0
         for viapoint in self.viapoints:
-            h_full = self.obs_mat(viapoint['t'])
+            bf_full = self.obs_mat(viapoint['t'])
             # the y mean and cov
-            mean_t = np.dot(h_full, self.meanW_full)[:,0]
-            cov_t = np.dot(h_full, np.dot(self.covW_full, h_full.T)) + self.sigmay
+            mean_t = np.dot(bf_full, self.meanW_full)[:,0]
+            cov_t = np.dot(bf_full, np.dot(self.covW_full, bf_full.T)) + self.sigmay
             prob = mvn.pdf(viapoint['obsy'], mean_t, cov_t, allow_singular=True)
             log_prob = math.log(prob) if prob != 0.0 else -np.inf
             prob_full = prob_full + log_prob
@@ -613,10 +613,10 @@ class IProMP(NDProMP):
         """
         prob_full = 0.0
         for obs_idx in range(len(time)):
-            h_full = self.obs_mat(time[obs_idx]/alpha_candidate)
-            mean_t = np.dot(h_full, self.meanW_full)[:, 0]
-            cov_t = np.dot(np.dot(h_full, self.covW_full), h_full.T) + self.sigmay
-            cov_t = np.dot(np.dot(h_full, self.covW_full), h_full.T)
+            bf_full = self.obs_mat(time[obs_idx]/alpha_candidate)
+            mean_t = np.dot(bf_full, self.meanW_full)[:, 0]
+            cov_t = np.dot(np.dot(bf_full, self.covW_full), bf_full.T) + self.sigmay
+            cov_t = np.dot(np.dot(bf_full, self.covW_full), bf_full.T)
 
             prob = mvn.pdf(obs[obs_idx], mean_t, cov_t, allow_singular=True)
             log_prob = math.log(prob) if prob != 0.0 else -np.inf

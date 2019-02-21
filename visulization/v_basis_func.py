@@ -20,30 +20,30 @@ datasets_norm_preproc = joblib.load(os.path.join(datasets_path, 'pkl/datasets_no
 
 num_basis = 12
 
-ex = datasets_norm_preproc[0][0]['left_joints'][:,1]
+y_t = datasets_norm_preproc[0][0]['left_joints'][:,1]
 
 x_grid = np.linspace(0, 1, len_norm)
 c_grid = np.arange(0,num_basis)/(num_basis-1.0)
 
-h = np.exp(-.5*(np.array(map(lambda x: x-c_grid, np.tile(x_grid, (num_basis, 1)).T)).T**2 / (sigma_basis**2)))
+basis_fuc = np.exp(-.5*(np.array(map(lambda x: x-c_grid, np.tile(x_grid, (num_basis, 1)).T)).T**2 / (sigma_basis**2)))
 
-w = np.dot(np.linalg.inv(np.dot(h, h.T)), np.dot(h, ex.T)).T
+w = np.dot(np.linalg.inv(np.dot(basis_fuc, basis_fuc.T)), np.dot(basis_fuc, y_t.T)).T
 
-y = np.dot(w, h)
+y_reg = np.dot(w, basis_fuc)
 
 fig = plt.figure(0)
-plt.plot(x_grid, ex, 'o', markersize=5, label='motion trajectory', color='r')
-plt.plot(x_grid, y, linewidth=3, alpha=1, label='regression curve', color='black')
+plt.plot(x_grid, y_t, 'o', markersize=5, label='motion trajectory', color='r')
+plt.plot(x_grid, y_reg, linewidth=3, alpha=1, label='regression curve', color='black')
 plt.bar(c_grid, w, width=0.05, edgecolor='w', alpha=0.5)
-x_grid = np.linspace(0, 1.5, len_norm)
-c_grid = np.arange(0,num_basis)/(num_basis-1.0)
-h = np.exp(-.5*(np.array(map(lambda x: x-c_grid, np.tile(x_grid, (num_basis, 1)).T)).T**2 / (sigma_basis**2)))
-plt.plot(x_grid, h.T, linewidth=2, alpha=0.5, color='black')
+# x_grid = np.linspace(0, 1.5, len_norm)
+# c_grid = np.arange(0,num_basis)/(num_basis-1.0)
+# basis_fuc = np.exp(-.5*(np.array(map(lambda x: x-c_grid, np.tile(x_grid, (num_basis, 1)).T)).T**2 / (sigma_basis**2)))
+plt.plot(x_grid, basis_fuc.T, linewidth=2, alpha=0.5, color='black')
 
 plt.ylim((0, 1.5))
 plt.xlim((0, 1.1))
 plt.xlabel('t(s)')
-plt.ylabel('y(m)')
+plt.ylabel('y_reg(m)')
 
 plt.legend()
 plt.show()
