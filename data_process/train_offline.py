@@ -18,7 +18,7 @@ import noise_cov_cal
 # the current file path
 file_path = os.path.dirname(__file__)
 
-method = "promp"
+method = "ipromp"
 # method = "emg_ipromp"
 # method = "ipromp"
 

@@ -256,7 +256,6 @@ class ProMP(object):
                 plt.plot(viapoint['t'], viapoint['obsy'], marker="o", markersize=15, color='red')
             # plt.errorbar(viapoint['t'], viapoint['obsy'], yerr=self.sigmay, fmt='o', markersize=15)
 
-<<<<<<< HEAD
     def plot_nUpdated(self, legend='', color='g', via_show=True, alpha_std=0.4, mean_line_width=3):
         """
         plot the n-dimension updated distribution, valid from NDProMP or IProMP
@@ -274,8 +273,6 @@ class ProMP(object):
             for viapoint_id, viapoint in enumerate(self.viapoints):
                 plt.plot(viapoint['t'], viapoint['obsy'], marker="o", markersize=10, color=color)
                 plt.errorbar(viapoint['t'], viapoint['obsy'], yerr=self.sigmay, fmt="o")
-=======
->>>>>>> 0f21c22cc0372c6ef39468053f9e8eed45f6f39e
 
 
 class NDProMP(object):

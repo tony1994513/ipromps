@@ -182,16 +182,6 @@ def plot_post(num=0):
             ax = fig.add_subplot(joint_num, 1, 1 + joint_idx)
             MPs.promps[joint_idx + info_n_idx[info][0]].plot_nUpdated(color='r', via_show=True)
 
-
-# plot the generated robot motion trajectory
-def plot_robot_traj(num=0):
-    fig = plt.figure(num)
-    fig.suptitle('predict robot motion')
-    for joint_idx in range(7):
-        ax = fig.add_subplot(7, 1, 1 + joint_idx)
-        plt.plot(np.linspace(0, 1.0, 101), robot_traj_online[:, joint_idx])
-
-
 # plot the raw data index
 def plot_raw_data_index(num=0):
     for task_idx, demo_list in enumerate(data_index):
@@ -203,7 +193,6 @@ def plot_raw_data_index(num=0):
                 data = datasets_raw[task_idx][demo_idx][info][:, joint_idx]
                 plt.plot(range(len(data)), data, label=str(demo_idx))
                 plt.legend()
-
 
 # plot the filter data index
 def plot_filter_data_index(num=0):
@@ -271,99 +260,6 @@ def plot_3d_filtered_r_traj(num=0):
             ax.plot(data[:, 0], data[:, 1], data[:, 2], linewidth=1, linestyle='-', alpha=1, color="grey")
         ax.legend(fontsize=20)
 
-
-start_idx = 40
-ratio = 5
-# plot the offline obs
-def plot_offline_3d_obs(num=0):
-    for task_idx, demo_list in enumerate(data_index):
-        fig = plt.figure(task_idx + num,figsize=(8, 6), dpi=80, facecolor='w', edgecolor='w')
-        ax = fig.gca(projection='3d')
-        obs_data_dict = ground_truth
-        data = obs_data_dict['left_hand']
-        ax.plot(data[start_idx:num_obs:ratio, 0], data[start_idx:num_obs:ratio, 1], data[start_idx:num_obs:ratio, 2],
-                'o', markersize=10, label='Human motion observations', alpha=1.0,
-                markerfacecolor='none', markeredgewidth=1.0, markeredgecolor='r')
-        ax.plot(data[:, 0], data[:, 1], data[:, 2],
-                '-', linewidth=2, color='r', label='Ground truth', alpha = 1.0)
-        data = ground_truth['left_joints']
-        ax.plot(data[:, 0], data[:, 1], data[:, 2],
-                linewidth=2, linestyle='-', color='r', alpha=1.0)
-        # ax.legend(fontsize=20)
-
-def plot_promp_movement(num=0):
-    for task_idx, demo_list in enumerate(data_index):
-        fig = plt.figure(task_idx + num,figsize=(8, 6), dpi=80, facecolor='w', edgecolor='w')
-        ax = fig.gca(projection='3d')
-        robot_gt = ground_truth['left_joints']
-        robot_pred = promp_robotTraj_offline[task_idx]
-        ax.plot(robot_gt[:, 0], robot_gt[:, 1], robot_gt[:, 2],
-                linewidth=3, linestyle='-', color='r', alpha=1.0, label='Robot movement groundtruth')
-        ax.plot(robot_pred[:, 0], robot_pred[:, 1], robot_pred[:, 2],
-                linewidth=3, linestyle='-', color='g', alpha=1.0, label='Robot movement prediction')  
-        ax.plot(promp_viapoint[:, 0], promp_viapoint[:, 1], promp_viapoint[:, 2],
-                'o', markersize=10, label='via_points', alpha=1.0,
-                markerfacecolor='none', markeredgewidth=1.0, markeredgecolor='r')                  
-        ax.legend(fontsize=20)
-        
-# plot the 3d generated robot traj
-def plot_gen_3d_offline_r_traj(num=0,figsize=(8, 6), dpi=300, facecolor='w', edgecolor='w'):
-    for task_idx, demo_list in enumerate(data_index):
-        fig = plt.figure(task_idx+num)
-        ax = fig.gca(projection='3d')
-        data = robot_traj_offline[task_idx][1]
-        ax.plot(data[:, 0], data[:, 1], data[:, 2], 'b',
-                linewidth=2, linestyle='-', label='Predicted mean')
-        data = robot_traj_offline[task_idx][0]
-        ax.plot(data[:, 0], data[:, 1], data[:, 2], 'b',
-                linewidth=2, linestyle='-')
-        ax.legend(fontsize=20)
-
-# plot offline test pair
-def pairs_offline(num=0):
-    plot_3d_filtered_h_traj(num)
-    plot_3d_filtered_r_traj(num)
-    plot_offline_3d_obs(num)
-    plot_gen_3d_offline_r_traj(num)
-
-def promp_offline(num=0):
-    plot_3d_filtered_r_traj(num)
-    plot_promp_movement(num=0)
-# plot the 3d generated robot traj
-def plot_gen_3d_online_r_traj(num=0):
-    for task_idx, demo_list in enumerate(data_index):
-        fig = plt.figure(task_idx+num)
-        ax = fig.gca(projection='3d')
-        data = robot_traj_online
-        ax.plot(data[:, 0], data[:, 1], data[:, 2],
-                linewidth=8, linestyle='-', label='generated online robot traj', alpha=0.2)
-        plt.xlabel('X (m)')
-        plt.ylabel('Y (m)')
-        plt.zlabel('Z (m)')
-
-def plot_online_3d_obs(num):
-    for task_idx, demo_list in enumerate(data_index):
-        fig = plt.figure(task_idx + num)
-        ax = fig.gca(projection='3d')
-        data = obs_data_online
-        ax.plot(data[0:num_obs, 0], data[0:num_obs, 1], data[0:num_obs, 2],
-                'o', linewidth=3, label='obs points', alpha=0.2)
-        ax.set_xlabel('X (m)')
-        ax.set_ylabel('Y (m)')
-        ax.set_zlabel('Z (m)')
-
-
-
-
-
-
-# plot online test pair
-def pairs_online(num=0):
-    plot_3d_filtered_h_traj(num)
-    plot_3d_filtered_r_traj(num)
-    plot_online_3d_obs(num)
-    plot_gen_3d_online_r_traj(num)
-
 # plot the filtered data
 def plot_single_dim(num=0):
     for task_idx, MPs in enumerate(MPs_set):
@@ -410,6 +306,49 @@ def plot_norm_result(num):
         ax.set_xlabel('t(s)')
         ax.set_ylabel('y(m)')
 
+def plot_MPs_gen(num=0):
+    for task_idx, demo_list in enumerate(data_index):
+        fig = plt.figure(task_idx + num,figsize=(8, 6), dpi=80, facecolor='w', edgecolor='w')
+        ax = fig.gca(projection='3d')
+        if method == "promp":
+            robot_gt = ground_truth['left_joints']
+            robot_pred = MP_traj_offline[task_idx]
+            ax.plot(robot_gt[:, 0], robot_gt[:, 1], robot_gt[:, 2],
+                    linewidth=3, linestyle='-', color='r', alpha=1.0, label='Robot movement groundtruth')
+            ax.plot(robot_pred[:, 0], robot_pred[:, 1], robot_pred[:, 2],
+                    linewidth=3, linestyle='-', color='g', alpha=1.0, label='Robot movement prediction')  
+            ax.plot(viapoint[:, 0], viapoint[:, 1], viapoint[:, 2],
+                    'o', markersize=10, label='via_points', alpha=1.0,
+                    markerfacecolor='none', markeredgewidth=1.0, markeredgecolor='r')                  
+            ax.legend(fontsize=20)
+        elif method == "ipromp":
+            robot_gt = ground_truth['left_joints']
+            robot_pred = MP_traj_offline[task_idx][1]
+            human_gt = ground_truth['left_hand']
+            human_pred = MP_traj_offline[task_idx][0]
+            ax.plot(robot_gt[:, 0], robot_gt[:, 1], robot_gt[:, 2],
+                    linewidth=3, linestyle='-', color='r', alpha=1.0, label='Robot movement groundtruth')
+            ax.plot(robot_pred[:, 0], robot_pred[:, 1], robot_pred[:, 2],
+                    linewidth=3, linestyle='-', color='g', alpha=1.0, label='Robot movement prediction')  
+            ax.plot(human_gt[:, 0], human_gt[:, 1], human_gt[:, 2],
+                    linewidth=3, linestyle='-', color='r', alpha=1.0, label='Human movement groundtruth')
+            ax.plot(human_pred[:, 0], human_pred[:, 1], human_pred[:, 2],
+                    linewidth=3, linestyle='-', color='g', alpha=1.0, label='Human movement prediction')  
+            ax.plot(viapoint[:, 0], viapoint[:, 1], viapoint[:, 2],
+                    'o', markersize=10, label='via_points', alpha=1.0,
+                    markerfacecolor='none', markeredgewidth=1.0, markeredgecolor='r')                  
+            ax.legend(fontsize=20)
+
+
+def plot_MPs_offline(num=0):
+    if method=="promp":
+        plot_3d_filtered_r_traj(num)
+        plot_MPs_gen(num)
+    elif method=="ipromp":
+        plot_3d_filtered_r_traj(num)
+        plot_MPs_gen(num)
+        plot_3d_filtered_h_traj(num)
+
 
 def main():
     # conf_zh("Droid Sans Fallback")
@@ -428,19 +367,14 @@ def main():
     # plot_preproc_result(10)
     # plot_norm_result(10)
 
-    #3D
-<<<<<<< HEAD:visulization/visualization_lib.py
-    # promp_offline(0)
-=======
->>>>>>> 0f21c22cc0372c6ef39468053f9e8eed45f6f39e:visulization/visualization.py
     # plot_3d_raw_traj(10)
     # plot_3d_gen_r_traj_online(10)
-    pairs_offline(0)
+    plot_MPs_offline(0)
     # pairs_online(10)
 
     plt.yticks(fontsize=15)
     plt.xticks(fontsize=15)
-    plt.savefig('fig3',format='eps')
+    # plt.savefig('fig3',format='eps')
     plt.show()
 
 
