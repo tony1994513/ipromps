@@ -26,7 +26,9 @@ datasets_norm = joblib.load(os.path.join(datasets_path, 'pkl/datasets_norm.pkl')
 datasets_filtered = joblib.load(os.path.join(datasets_path, 'pkl/datasets_filtered.pkl'))
 datasets_norm_preproc = joblib.load(os.path.join(datasets_path, 'pkl/datasets_norm_preproc.pkl'))
 task_name = joblib.load(os.path.join(datasets_path, 'pkl/task_name_list.pkl'))
-[robot_traj_offline, ground_truth, num_obs] = joblib.load(os.path.join(datasets_path, 'pkl/robot_traj_offline.pkl'))
+# [robot_traj_offline, ground_truth, num_obs] = joblib.load(os.path.join(datasets_path, 'pkl/robot_traj_offline.pkl'))
+[promp_robotTraj_offline, ground_truth,promp_viapoint] = joblib.load(os.path.join(datasets_path, 'pkl/promp_robotTraj_offline.pkl'))
+
 # robot_traj_online = joblib.load(os.path.join(datasets_path, 'pkl/robot_traj_online.pkl'))
 # obs_data_online = joblib.load(os.path.join(datasets_path, 'pkl/obs_data_online.pkl'))
 
@@ -260,11 +262,11 @@ def plot_3d_filtered_r_traj(num=0):
         ax = fig.gca(projection='3d')
         for demo_idx in demo_list:
             data = datasets_filtered[task_idx][demo_idx]['left_joints']
-            # if demo_idx == 0:
-            #         ax.plot(data[:, 0], data[:, 1], data[:, 2],
-            #         linewidth=1, linestyle='-', alpha=1,label='Robot training dataset', color="grey")
+            if demo_idx == 0:
+                    ax.plot(data[:, 0], data[:, 1], data[:, 2],
+                    linewidth=1, linestyle='-', alpha=1,label='Robot training dataset', color="grey")
             ax.plot(data[:, 0], data[:, 1], data[:, 2], linewidth=1, linestyle='-', alpha=1, color="grey")
-        # ax.legend(fontsize=20)
+        ax.legend(fontsize=20)
 
 
 start_idx = 40
@@ -286,6 +288,21 @@ def plot_offline_3d_obs(num=0):
                 linewidth=2, linestyle='-', color='r', alpha=1.0)
         # ax.legend(fontsize=20)
 
+def plot_promp_movement(num=0):
+    for task_idx, demo_list in enumerate(data_index):
+        fig = plt.figure(task_idx + num,figsize=(8, 6), dpi=80, facecolor='w', edgecolor='w')
+        ax = fig.gca(projection='3d')
+        robot_gt = ground_truth['left_joints']
+        robot_pred = promp_robotTraj_offline[task_idx]
+        ax.plot(robot_gt[:, 0], robot_gt[:, 1], robot_gt[:, 2],
+                linewidth=3, linestyle='-', color='r', alpha=1.0, label='Robot movement groundtruth')
+        ax.plot(robot_pred[:, 0], robot_pred[:, 1], robot_pred[:, 2],
+                linewidth=3, linestyle='-', color='g', alpha=1.0, label='Robot movement prediction')  
+        ax.plot(promp_viapoint[:, 0], promp_viapoint[:, 1], promp_viapoint[:, 2],
+                'o', markersize=10, label='via_points', alpha=1.0,
+                markerfacecolor='none', markeredgewidth=1.0, markeredgecolor='r')                  
+        ax.legend(fontsize=20)
+        
 # plot the 3d generated robot traj
 def plot_gen_3d_offline_r_traj(num=0,figsize=(8, 6), dpi=80, facecolor='w', edgecolor='w'):
     for task_idx, demo_list in enumerate(data_index):
@@ -306,8 +323,9 @@ def pairs_offline(num=0):
     plot_offline_3d_obs(num)
     plot_gen_3d_offline_r_traj(num)
 
-
-
+def promp_offline(num=0):
+    plot_3d_filtered_r_traj(num)
+    plot_promp_movement(num=0)
 # plot the 3d generated robot traj
 def plot_gen_3d_online_r_traj(num=0):
     for task_idx, demo_list in enumerate(data_index):
@@ -319,10 +337,6 @@ def plot_gen_3d_online_r_traj(num=0):
         plt.xlabel('X (m)')
         plt.ylabel('Y (m)')
         plt.zlabel('Z (m)')
-
-
-
-
 
 def plot_online_3d_obs(num):
     for task_idx, demo_list in enumerate(data_index):
@@ -412,7 +426,8 @@ def main():
     # plot_norm_result(10)
 
     #3D
-    plot_3d_raw_traj(10)
+    promp_offline(0)
+    # plot_3d_raw_traj(10)
     # plot_3d_gen_r_traj_online(10)
     # pairs_offline(0)
     # pairs_online(10)

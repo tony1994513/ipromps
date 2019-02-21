@@ -17,6 +17,9 @@ from scipy.interpolate import griddata
 import ipdb
 # the current file path
 file_path = os.path.dirname(__file__)
+promp = True
+ipromp = False
+emg_ipromp = False
 
 # read models cfg file
 cp_models = ConfigParser.SafeConfigParser()
@@ -25,7 +28,14 @@ cp_models.read(os.path.join(file_path, '../cfg/models.cfg'))
 datasets_path = os.path.join(file_path, cp_models.get('datasets', 'path'))
 len_norm = cp_models.getint('datasets', 'len_norm')
 num_demo = cp_models.getint('datasets', 'num_demo')
-num_dim = cp_models.getint('datasets', 'num_dim')
+if promp:
+    num_dim = cp_models.getint('promp_param', 'num_dim')
+elif ipromp:
+    num_dim = cp_models.getint('ipromp_param', 'num_dim')
+    num_obs_dim = cp_models.getint('ipromp_param', 'num_obs_dim')
+elif emg_ipromp:
+    num_dim = cp_models.getint('emg_ipromp_param', 'num_dim')
+    num_obs_dim = cp_models.getint('ipromp_param', 'num_obs_dim')
 
 # read filter params
 sigma = cp_models.getint('filter', 'sigma')
@@ -74,17 +84,6 @@ print("human index: %s" %human_index )
 print("robot index: %s" %robot_index )
 print("-----------")
 
-def filter_static_points(mat):
-    last = mat[0] # for refercence
-    new_mat = [last]
-    for idx in range(mat.shape[0]):
-        if np.linalg.norm(mat[idx]-last)<0.005:
-            pass
-        else:
-            new_mat.append(mat[idx])
-            last = mat[idx]
-    return np.array(new_mat)
-
 
 def main():
     # datasets-related info
@@ -112,7 +111,7 @@ def main():
 
         for left_hand_demo_path, left_joints_demo_path in zip(left_hand_path_list,left_joints_path_list):
             
-            left_hand_csv = pd.read_csv(os.path.join(left_hand_demo_path, 'multiModal_states.csv'))  
+            left_hand_csv = pd.read_csv(os.path.join(left_hand_demo_path, 'multiModal_states.csv')) 
             left_joints_csv = pd.read_csv(os.path.join(left_joints_demo_path, 'multiModal_states.csv')) 
 
             left_hand_csv_t = np.array((left_hand_csv.values[:,2] - left_hand_csv.values[0,2])*1e-9).astype("float")
@@ -120,7 +119,7 @@ def main():
 
             left_hand = left_hand_csv.values[:, leftHand_index[0]:leftHand_index[-1]].astype(float)
             left_joints = left_joints_csv.values[:, leftJoint_index[0]:leftJoint_index[-1]].astype(float)
-
+            # ipdb.set_trace()
             lenth = len(left_hand)
 
             t_end = left_hand_csv_t[-1]
@@ -173,11 +172,6 @@ def main():
             left_hand_filtered = gaussian_filter1d(demo_data['left_hand'].T, sigma=sigma).T
             left_joints_filtered = gaussian_filter1d(demo_data['left_joints'].T, sigma=sigma).T
 
-            # left_hand_resampled = filter_static_points(left_hand_filtered)
-            # left_joints_resampled = filter_static_points(left_joints_filtered)
-            # grid_hand = np.linspace(0, time_stamp[-1], len(left_hand_resampled))
-            # grid_joint = np.linspace(0, time_stamp[-1], len(left_joints_resampled))
-
             # normalize the datasets
             left_hand_norm = griddata(time_stamp, left_hand_filtered, grid, method='linear')
             left_joints_norm = griddata(time_stamp, left_joints_filtered, grid, method='linear')
@@ -198,8 +192,12 @@ def main():
     for task_idx, task_data in enumerate(datasets4train):
         print('Preprocessing data for task: ' + task_name_list[task_idx])
         for demo_data in task_data:
-            h = np.hstack([demo_data['left_hand'], demo_data['left_joints']])
-            y_full = np.vstack([y_full, h])
+            if promp:
+                h = demo_data['left_joints']
+                y_full = np.vstack([y_full, h])
+            elif ipromp or emg_ipromp:
+                h = np.hstack([demo_data['left_hand'], demo_data['left_joints']])
+                y_full = np.vstack([y_full, h])
     min_max_scaler = preprocessing.MinMaxScaler()
     datasets_norm_full = min_max_scaler.fit_transform(y_full)
     # construct a data structure to train the model
@@ -210,10 +208,14 @@ def main():
         for demo_idx in range(num_demo):
             temp = datasets_norm_full[(task_idx * num_demo + demo_idx) * len_norm:
             (task_idx * num_demo + demo_idx) * len_norm + len_norm, :]
-            datasets_temp.append({
-                                    'left_hand': temp[:, human_index[0]:human_index[-1]],
-                                    'left_joints': temp[:, robot_index[0]:robot_index[-1]],
-                                    'alpha': datasets4train[task_idx][demo_idx]['alpha']})
+            if ipromp:
+                datasets_temp.append({
+                                        'left_hand': temp[:, human_index[0]:human_index[-1]],
+                                        'left_joints': temp[:, robot_index[0]:robot_index[-1]],
+                                        'alpha': datasets4train[task_idx][demo_idx]['alpha']})
+            if promp:
+                datasets_temp.append({'left_joints': temp,
+                                      'alpha': datasets4train[task_idx][demo_idx]['alpha']})                                        
         datasets_norm_preproc.append(datasets_temp)
 
     # save all the datasets

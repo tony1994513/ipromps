@@ -24,24 +24,33 @@ emg_index =  [int(x.strip()) for x in emg_index.split(',')]
 leftHand_index =  [int(x.strip()) for x in leftHand_index.split(',')]
 leftJoint_index =  [int(x.strip()) for x in leftJoint_index.split(',')]
 
+promp = True
+ipromp = False
+emg_ipromp = False
 
 def main():
     # read csv file
     csv_path = os.path.join(datasets_path, 'info/noise/multiModal_states.csv')
     data = pd.read_csv(csv_path)
-
     # extract the all signals data ORIENTATION
-    # emg = data.values[:, 7:15].astype(float)
+    emg = data.values[:, 7:15].astype(float)
     left_hand = data.values[:, leftHand_index[0]:leftHand_index[-1]].astype(float)
     left_joints = data.values[:, leftJoint_index[0]:leftJoint_index[-1]].astype(float)  # robot ee actually
 
-    # stack them as a big matrix
-    full_data = np.hstack([left_hand, left_joints])[1200:, :]
-    full_data = min_max_scaler.transform(full_data)
+    if promp:
+        full_data = left_joints[1200:, :]
+        full_data = min_max_scaler.transform(left_joints)
+
+    elif emg_ipromp:
+        full_data = np.hstack([left_hand, emg, left_joints])[1200:, :]
+        full_data = min_max_scaler.transform(full_data)
+
+    elif ipromp:
+        full_data = np.hstack([left_hand, left_joints])[1200:, :]
+        full_data = min_max_scaler.transform(full_data)
 
     # compute the noise observation covariance matrix
     noise_cov = np.cov(full_data.T)
-
     # save it in pkl
     joblib.dump(noise_cov, os.path.join(datasets_path, 'pkl/noise_cov.pkl'))
     print('Saved the noise covariance matrix successfully!')

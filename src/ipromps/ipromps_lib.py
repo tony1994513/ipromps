@@ -229,7 +229,7 @@ class ProMP(object):
                 plt.plot(viapoint['t'], viapoint['obsy'], marker="o", markersize=15, color='red')
             # plt.errorbar(viapoint['t'], viapoint['obsy'], yerr=self.sigmay, fmt='o', markersize=15)
 
-    def plot_nUpdated(self, legend='', color='b', via_show=True, alpha_std=0.4, mean_line_width=3):
+    def plot_nUpdated(self, legend='', color='g', via_show=True, alpha_std=0.4, mean_line_width=3):
         """
         plot the n-dimension updated distribution, valid from NDProMP or IProMP
         """
@@ -439,7 +439,7 @@ class IProMP(NDProMP):
     (n)-dimensional Interaction ProMP, derived from NDProMP
     """
     def __init__(self, num_joints=28, num_obs_joints=None, num_basis=11, sigma_basis=0.05,
-                 num_samples=101, sigmay=None, min_max_scaler=None, num_alpha_candidate=10):
+                 num_samples=101, sigmay=None, min_max_scaler=None, num_alpha_candidate=10,method="promp"):
         """
         construct function, call NDProMP construct function and define the member variables
         :param num_joints:
@@ -455,7 +455,8 @@ class IProMP(NDProMP):
         noise_cov_full = sigmay
         NDProMP.__init__(self, num_joints=num_joints, num_basis=num_basis,
                          sigma_basis=sigma_basis, num_samples=num_samples, sigmay=noise_cov_full)
-
+        
+        self.method = method
         self.viapoints = []
         self.num_obs_joints = num_obs_joints    # the observed joints number
 
@@ -493,11 +494,16 @@ class IProMP(NDProMP):
                       np.tile(t, (self.num_basis, 1)).T)).T**2 / (self.sigma_basis ** 2)))
         zero_entry = np.zeros([1, self.num_basis])
         bf_full = np.array([]).reshape(0,0)
-        # construct the obs mat
-        for idx_obs in range(self.num_obs_joints):
-            bf_full = scipy.linalg.block_diag(bf_full, bf.T)
-        for idx_non_obs in range(self.num_joints - self.num_obs_joints):
-            bf_full = scipy.linalg.block_diag(bf_full, zero_entry)
+        if self.method == "ipromp":
+            # construct the obs mat
+            for idx_obs in range(self.num_obs_joints):
+                bf_full = scipy.linalg.block_diag(bf_full, bf.T)
+            for idx_non_obs in range(self.num_joints - self.num_obs_joints):
+                bf_full = scipy.linalg.block_diag(bf_full, zero_entry)
+        elif self.method == "promp":
+            # construct the obs mat
+            for idx_obs in range(self.num_obs_joints):
+                bf_full = scipy.linalg.block_diag(bf_full, bf.T)
         return bf_full
 
     def add_viapoint(self, t, obsys):
@@ -514,13 +520,13 @@ class IProMP(NDProMP):
             self.promps[joint_demo].add_viapoint(t, obsys[joint_demo])
         self.viapoints.append({'t': t, 'obsy': obsys})
 
-    def param_update(self, unit_update,update_time=0):
+    def param_update(self, unit_update,dynamic_update=None):
         """
         updated the mean and sigma of w by the via points
         :param unit_update: the bool option for
         :return:
         """
-        if update_time == 0:
+        if dynamic_update == None:
             new_meanW_full = self.meanW_full
             new_covW_full = self.covW_full
         else:
