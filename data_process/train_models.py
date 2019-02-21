@@ -12,8 +12,8 @@ def main(num_dim=7, num_obs_dim=7, num_basis=31,min_max_scaler=None,
          method="promp"):
     
     task_name_path = os.path.join(datasets_pkl_path, 'task_name_list.pkl')
-    datasets_norm_preproc_path = os.path.join(datasets_pkl_path, 'datasets_norm_preproc.pkl')
-    noise_cov_path = os.path.join(datasets_pkl_path, 'noise_cov.pkl')
+    datasets_norm_preproc_path = os.path.join(datasets_pkl_path, method+'_datasets_norm_preproc.pkl')
+    noise_cov_path = os.path.join(datasets_pkl_path, method+'_noise_cov.pkl')
 
     task_name = joblib.load(task_name_path)
     noise_cov = joblib.load(noise_cov_path)
@@ -35,7 +35,7 @@ def main(num_dim=7, num_obs_dim=7, num_basis=31,min_max_scaler=None,
                 promp.add_alpha(demo_idx['alpha'])   # temporal variance demo
         # save the trained models
         print('Saving the trained models...')
-        joblib.dump(promps_set, os.path.join(datasets_pkl_path, 'promps_set.pkl'))
+        joblib.dump(promps_set, os.path.join(datasets_pkl_path, 'promp_set.pkl'))
         print('Trained the ProMPs successfully!!!')
 
     elif method =="ipromp" or method =="emg_ipromp":
@@ -53,7 +53,7 @@ def main(num_dim=7, num_obs_dim=7, num_basis=31,min_max_scaler=None,
                 ipromp.add_alpha(demo_idx['alpha'])   # temporal variance demo
         # save the trained models
         print('Saving the trained models...')
-        joblib.dump(ipromps_set, os.path.join(datasets_pkl_path, 'ipromps_set.pkl'))
+        joblib.dump(ipromps_set, os.path.join(datasets_pkl_path, 'ipromp_set.pkl'))
         print('Trained the IProMPs successfully!!!')
 
 

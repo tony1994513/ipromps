@@ -29,11 +29,11 @@ def main(method="promp",min_max_scaler=None,emg_index=None,
     elif method =="ipromp":
         full_data = np.hstack([left_hand, left_joints])[1200:, :]
         full_data = min_max_scaler.transform(full_data)
-
+        
     # compute the noise observation covariance matrix
     noise_cov = np.cov(full_data.T)
     # save it in pkl
-    joblib.dump(noise_cov, os.path.join(datasets_path, 'pkl/noise_cov.pkl'))
+    joblib.dump(noise_cov, os.path.join(datasets_path, 'pkl/'+method+'_noise_cov.pkl'))
     print('Saved the noise covariance matrix successfully!')
 
 

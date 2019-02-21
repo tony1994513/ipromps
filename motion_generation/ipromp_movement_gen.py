@@ -20,9 +20,12 @@ num_alpha_candidate = cp_models.getint('phase', 'num_phaseCandidate')
 task_name_path = os.path.join(datasets_path, 'pkl/task_name_list.pkl')
 task_name = joblib.load(task_name_path)
 sigma = cp_models.getint('filter', 'sigma')
-ipromps_set = joblib.load(os.path.join(datasets_path, 'pkl/ipromps_set.pkl'))
-datasets_raw = joblib.load(os.path.join(datasets_path, 'pkl/datasets_raw.pkl'))
-num_obs_dim = cp_models.getint('datasets', 'num_obs_dim')
+ipromp_set = joblib.load(os.path.join(datasets_path, 'pkl/ipromp_set.pkl'))
+method = 'ipromp' 
+datasets_raw = joblib.load(os.path.join(datasets_path, 'pkl/'+method+'_datasets_raw.pkl'))
+
+num_dim = cp_models.getint('ipromp_param', 'num_dim')
+num_obs_dim = cp_models.getint('ipromp_param', 'num_obs_dim')
 
 # read datasets cfg file
 cp_datasets = ConfigParser.SafeConfigParser()
@@ -55,7 +58,7 @@ def main():
     # filter the data
     obs_data = gaussian_filter1d(obs_data.T, sigma=sigma).T
     # preprocessing for the data
-    obs_data_post_arr = ipromps_set[0].min_max_scaler.transform(obs_data)
+    obs_data_post_arr = ipromp_set[0].min_max_scaler.transform(obs_data)
     # consider the unobserved info
     obs_data_post_arr[:, num_obs_dim:] = 0.0
 
@@ -72,22 +75,22 @@ def main():
     # phase estimation
     print('Phase estimating...')
     alpha_max_list = []
-    for ipromp in ipromps_set:
+    for ipromp in ipromp_set:
         alpha_temp = ipromp.alpha_candidate(num_alpha_candidate)
         idx_max = ipromp.estimate_alpha(alpha_temp, obs_data_post_arr, timestamp)
         alpha_max_list.append(alpha_temp[idx_max]['candidate'])
         ipromp.set_alpha(alpha_temp[idx_max]['candidate'])
-    ipdb.set_trace()
+    # ipdb.set_trace()
     # task recognition
     print('Adding via points in each trained model...')
-    for task_idx, ipromp in enumerate(ipromps_set):
+    for task_idx, ipromp in enumerate(ipromp_set):
         for idx in range(len(timestamp)):
             ipromp.add_viapoint(timestamp[idx] / alpha_max_list[task_idx], obs_data_post_arr[idx, :])
         ipromp.param_update(unit_update=True)
     print('Computing the likelihood for each model under observations...')
 
     prob_task = []
-    for ipromp in ipromps_set:
+    for ipromp in ipromp_set:
         prob_task_temp = ipromp.prob_obs()
         prob_task.append(prob_task_temp)
     idx_max_prob = np.argmax(prob_task)
@@ -95,34 +98,20 @@ def main():
 
     # robot motion generation
     traj_full = []
-    for ipromp_id, ipromp in enumerate(ipromps_set):
+    for ipromp_id, ipromp in enumerate(ipromp_set):
         [traj_time, traj] = ipromp.gen_real_traj(alpha_max_list[ipromp_id])
         traj = ipromp.min_max_scaler.inverse_transform(traj)
         human_traj= traj[:, human_index[0]:human_index[-1]]
         robot_traj = traj[:, robot_index[0]:robot_index[-1]]   
         traj_full.append([human_traj, robot_traj])
 
-    # if plot != None:
-    #     for task_idx, task in traj_full:
-    #         fig = plt.figure()
-    #         ax = fig.add_subplot( projection='3d')
-    #         human = task[0]
-    #         robot = task[1]
-    #         ipdb.set_trace()
-    #         ax.plot(human[:,0],human[:,1],human[:,2])
-    #         ax.plot(robot[:,0],robot[:,1],robot[:,2])
-    #     plt.show()
-
-
-
 
     # save the conditional result
     print('Saving the post IProMPs...')
-    joblib.dump(ipromps_set, os.path.join(datasets_path, 'pkl/ipromps_set_post_offline.pkl'))
+    joblib.dump(ipromp_set, os.path.join(datasets_path, 'pkl/'+method+'_set_post_offline.pkl'))
     # save the robot traj
     print('Saving the robot traj...')
-    joblib.dump([traj_full, obs_data_dict, num_obs], os.path.join(datasets_path, 'pkl/robot_traj_offline.pkl'))
-
+    joblib.dump([traj_full, obs_data_dict, num_obs], os.path.join(datasets_path, 'pkl/'+method+'_traj_offline.pkl'))
 
 if __name__ == '__main__':
     main()

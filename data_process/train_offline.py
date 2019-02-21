@@ -38,6 +38,12 @@ elif method == "emg_ipromp" :
     num_dim = cp_models.getint('emg_ipromp_param', 'num_dim')
     num_obs_dim = cp_models.getint('ipromp_param', 'num_obs_dim')
 
+# after processed human/robot index
+human_index = cp_models.get('processed_index', 'human')
+robot_index = cp_models.get('processed_index', 'robot')
+human_index =  [int(x.strip()) for x in human_index.split(',')]
+robot_index = [int(x.strip()) for x in robot_index.split(',')]
+
 # read csv params
 emg_index = cp_models.get('csv_parse', 'emg')
 leftHand_index = cp_models.get('csv_parse', 'left_hand')
@@ -62,8 +68,8 @@ data_index = [map(int, task[1].split(',')) for task in data_index_sec]
 
 # the pkl data path
 datasets_pkl_path = os.path.join(datasets_path, 'pkl')
-min_max_scaler_path = os.path.join(datasets_pkl_path, 'min_max_scaler.pkl')
-min_max_scaler = joblib.load(min_max_scaler_path)
+min_max_scaler_path = os.path.join(datasets_pkl_path, method+'_min_max_scaler.pkl')
+
 
 task_path_list = sorted(glob.glob(os.path.join(datasets_path, 'raw/*')))
 
@@ -72,9 +78,11 @@ def main():
     print('## Running the %s' % load_data.__name__)
     load_data.main(num_dim=num_dim, sigma=sigma, method=method, num_demo=num_demo,data_index=data_index, 
                    len_norm=len_norm, leftHand_index=leftHand_index, leftJoint_index=leftJoint_index,
-                    task_path_list=task_path_list, datasets_path=datasets_path)
+                    task_path_list=task_path_list, datasets_path=datasets_path,human_index=human_index,
+                    robot_index=robot_index)
     print("-----------")
     print('## Running the %s' % noise_cov_cal.__name__)
+    min_max_scaler = joblib.load(min_max_scaler_path)
     noise_cov_cal.main(method=method,min_max_scaler=min_max_scaler,emg_index=emg_index,
                        leftHand_index=leftHand_index,leftJoint_index=leftJoint_index, datasets_path=datasets_path)
     print("-----------")

@@ -15,8 +15,8 @@ from scipy.ndimage.filters import gaussian_filter1d
 from scipy.interpolate import griddata
 import ipdb
 
-def main(num_dim=7, sigma=5, len_norm=101, data_index=None,method="promp",num_demo=19,
-         leftHand_index=None, leftJoint_index=None,task_path_list=None, datasets_path=None):
+def main(num_dim=7, sigma=5, len_norm=101, data_index=None,method="promp",num_demo=19,robot_index=None,
+         human_index =None, leftHand_index=None, leftJoint_index=None,task_path_list=None, datasets_path=None):
     # datasets-related info
 
     task_name_list = [task_path.split('/')[-1] for task_path in task_path_list]
@@ -128,6 +128,7 @@ def main(num_dim=7, sigma=5, len_norm=101, data_index=None,method="promp",num_de
             elif method == "ipromp" or "emg_ipromp":
                 h = np.hstack([demo_data['left_hand'], demo_data['left_joints']])
                 y_full = np.vstack([y_full, h])
+    # ipdb.set_trace()
     min_max_scaler = preprocessing.MinMaxScaler()
     datasets_norm_full = min_max_scaler.fit_transform(y_full)
     # construct a data structure to train the model
@@ -151,11 +152,11 @@ def main(num_dim=7, sigma=5, len_norm=101, data_index=None,method="promp",num_de
     # save all the datasets
     print('Saving the datasets as pkl ...')
     joblib.dump(task_name_list, os.path.join(datasets_path, 'pkl/task_name_list.pkl'))
-    joblib.dump(datasets_raw, os.path.join(datasets_path, 'pkl/datasets_raw.pkl'))
-    joblib.dump(datasets_filtered, os.path.join(datasets_path, 'pkl/datasets_filtered.pkl'))
-    joblib.dump(datasets_norm, os.path.join(datasets_path, 'pkl/datasets_norm.pkl'))
-    joblib.dump(datasets_norm_preproc, os.path.join(datasets_path, 'pkl/datasets_norm_preproc.pkl'))
-    joblib.dump(min_max_scaler, os.path.join(datasets_path, 'pkl/min_max_scaler.pkl'))
+    joblib.dump(datasets_raw, os.path.join(datasets_path, 'pkl/'+method+'_datasets_raw.pkl'))
+    joblib.dump(datasets_filtered, os.path.join(datasets_path, 'pkl/'+method+'_datasets_filtered.pkl'))
+    joblib.dump(datasets_norm, os.path.join(datasets_path, 'pkl/'+method+'_datasets_norm.pkl'))
+    joblib.dump(datasets_norm_preproc, os.path.join(datasets_path, 'pkl/'+method+'_datasets_norm_preproc.pkl'))
+    joblib.dump(min_max_scaler, os.path.join(datasets_path, 'pkl/'+method+'_min_max_scaler.pkl'))
 
     # the finished reminder
     print('Loaded, filtered, normalized, preprocessed and saved the datasets successfully!!!')
