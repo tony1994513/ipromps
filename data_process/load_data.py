@@ -10,88 +10,19 @@ from scipy.interpolate import griddata
 from sklearn.externals import joblib
 import glob
 import os
-import ConfigParser
 from sklearn import preprocessing
 from scipy.ndimage.filters import gaussian_filter1d
 from scipy.interpolate import griddata
 import ipdb
-# the current file path
-file_path = os.path.dirname(__file__)
-promp = True
-ipromp = False
-emg_ipromp = False
 
-# read models cfg file
-cp_models = ConfigParser.SafeConfigParser()
-cp_models.read(os.path.join(file_path, '../cfg/models.cfg'))
-# read datasets params
-datasets_path = os.path.join(file_path, cp_models.get('datasets', 'path'))
-len_norm = cp_models.getint('datasets', 'len_norm')
-num_demo = cp_models.getint('datasets', 'num_demo')
-if promp:
-    num_dim = cp_models.getint('promp_param', 'num_dim')
-elif ipromp:
-    num_dim = cp_models.getint('ipromp_param', 'num_dim')
-    num_obs_dim = cp_models.getint('ipromp_param', 'num_obs_dim')
-elif emg_ipromp:
-    num_dim = cp_models.getint('emg_ipromp_param', 'num_dim')
-    num_obs_dim = cp_models.getint('ipromp_param', 'num_obs_dim')
-
-# read filter params
-sigma = cp_models.getint('filter', 'sigma')
-
-# read csv params
-emg_index = cp_models.get('csv_parse', 'emg')
-leftHand_index = cp_models.get('csv_parse', 'left_hand')
-leftJoint_index = cp_models.get('csv_parse', 'left_joints')
-
-# process csv params
-emg_index =  [int(x.strip()) for x in emg_index.split(',')]
-leftHand_index =  [int(x.strip()) for x in leftHand_index.split(',')]
-leftJoint_index =  [int(x.strip()) for x in leftJoint_index.split(',')]
-
-# read datasets cfg file
-cp_datasets = ConfigParser.SafeConfigParser()
-cp_datasets.read(os.path.join(datasets_path, './info/cfg/datasets.cfg'))
-#read datasets params
-data_index_sec = cp_datasets.items('index_17')
-data_index = [map(int, task[1].split(',')) for task in data_index_sec]
-
-# after processed human/robot index
-human_index = cp_models.get('processed_index', 'human')
-robot_index = cp_models.get('processed_index', 'robot')
-human_index =  [int(x.strip()) for x in human_index.split(',')]
-robot_index =  [int(x.strip()) for x in robot_index.split(',')]
-
-
-human_dim = leftHand_index[-1] - leftHand_index[0]
-robot_dim = leftJoint_index[-1] - leftJoint_index[0]
-
-
-print("dataset path : %s " %datasets_path)
-print("length of norm : %s " %len_norm)
-print("number of demo : %s " %num_demo)
-print("number of dimension : %s" %num_dim)
-print("filter sigma : %s" %sigma)
-print("-----------")
-print("emg index : %s" %emg_index)
-print("human csv index : %s" %leftHand_index)
-print("robot csv  index : %s" %leftJoint_index)
-print("human dimension : %s" %human_dim)
-print("robot dimension : %s" %robot_dim)
-print("-----------")
-print("human index: %s" %human_index )
-print("robot index: %s" %robot_index )
-print("-----------")
-
-
-def main():
+def main(num_dim=7, sigma=5, len_norm=101, data_index=None,method="promp",num_demo=19,
+         leftHand_index=None, leftJoint_index=None,task_path_list=None, datasets_path=None):
     # datasets-related info
-    
-    task_path_list = glob.glob(os.path.join(datasets_path, 'raw/*'))
-    task_path_list =sorted(task_path_list)
+
     task_name_list = [task_path.split('/')[-1] for task_path in task_path_list]
 
+    human_dim = leftHand_index[-1] - leftHand_index[0]
+    robot_dim = leftJoint_index[-1] - leftJoint_index[0]
     # load raw datasets
     datasets_raw = []
     for task_path in task_path_list:
@@ -124,7 +55,6 @@ def main():
 
             t_end = left_hand_csv_t[-1]
  
-
             resample_t = np.linspace(0.0, t_end, lenth)
             left_hand_resampled = [None] * human_dim
             left_joints_resampled = [None] * robot_dim
@@ -192,10 +122,10 @@ def main():
     for task_idx, task_data in enumerate(datasets4train):
         print('Preprocessing data for task: ' + task_name_list[task_idx])
         for demo_data in task_data:
-            if promp:
+            if method == "promp":
                 h = demo_data['left_joints']
                 y_full = np.vstack([y_full, h])
-            elif ipromp or emg_ipromp:
+            elif method == "ipromp" or "emg_ipromp":
                 h = np.hstack([demo_data['left_hand'], demo_data['left_joints']])
                 y_full = np.vstack([y_full, h])
     min_max_scaler = preprocessing.MinMaxScaler()
@@ -208,12 +138,12 @@ def main():
         for demo_idx in range(num_demo):
             temp = datasets_norm_full[(task_idx * num_demo + demo_idx) * len_norm:
             (task_idx * num_demo + demo_idx) * len_norm + len_norm, :]
-            if ipromp:
+            if method == "ipromp":
                 datasets_temp.append({
                                         'left_hand': temp[:, human_index[0]:human_index[-1]],
                                         'left_joints': temp[:, robot_index[0]:robot_index[-1]],
                                         'alpha': datasets4train[task_idx][demo_idx]['alpha']})
-            if promp:
+            if method =="promp":
                 datasets_temp.append({'left_joints': temp,
                                       'alpha': datasets4train[task_idx][demo_idx]['alpha']})                                        
         datasets_norm_preproc.append(datasets_temp)
