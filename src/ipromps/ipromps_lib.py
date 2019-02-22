@@ -174,8 +174,8 @@ class ProMP(object):
         sampW = np.random.multivariate_normal(newMean, randomness*newSigma, 1).T
         return np.dot(self.Phi.T, sampW)
 
-    def plot_prior(self,  b_distribution=True, color='b', alpha_std=0.4, linewidth_mean=2,
-                   b_regression=True, b_dataset=True, linewidth_data=2):
+    def plot_prior_distribution(self,  b_distribution=True, color='b', alpha_std=0.4, linewidth_mean=2,
+                   b_regression=False, b_dataset=True, linewidth_data=2):
         """
         plot the prior distribution from training sets
         :param legend: the figure legend
@@ -188,25 +188,29 @@ class ProMP(object):
         :param linewidth_data:
         :return:
         """
-        # x = self.x
-        x = np.linspace(0.0, 3.3, 101) 
+        x = self.x
+        distribution_factor = 2
         # the probability distribution
         if b_distribution:
             mean = np.dot(self.Phi.T, self.meanW)
             std = 2 * np.sqrt(np.diag(np.dot(self.Phi.T, np.dot(self.sigmaW, self.Phi))))
-            plt.fill_between(x, mean-std, mean+std, color=color, alpha=alpha_std,label="Initial distribution")
+            plt.fill_between(x, mean-distribution_factor*std, mean+distribution_factor*std, color=color, alpha=alpha_std,label="Initial distribution")
             plt.plot(x, mean, color=color, label="Initial distribution mean", linewidth=linewidth_mean)
         # the regression result
         if b_regression:
             for w in self.W:
                 reg = np.dot(self.Phi.T, w)
-                plt.plot(x, reg, color='black', label=legend, linewidth=linewidth_data, alpha=0.5)
+                plt.plot(x, reg, color='black', label="Mean", linewidth=linewidth_data, alpha=0.5)
         # the dataset to train to model
         if b_dataset:
-            for y in self.Y:
-                plt.plot(x, y, color='gray', label=legend, linewidth=linewidth_data, alpha=0.5)
+            for idx,y in enumerate(self.Y):
+                if idx == 0:
+                    plt.plot(x, y, color='gray',label="dataset", linewidth=linewidth_data, alpha=0.5)
+                else:
+                    plt.plot(x, y, color='gray', linewidth=linewidth_data, alpha=0.5)
 
-    def plot_nUpdated(self,  color='g', via_show=True, alpha_std=0.4, mean_line_width=2):
+
+    def plot_nUpdated_distribution(self, legend='', color='g', via_show=True, alpha_std=0.4, mean_line_width=3):
         """
         plot the n-dimension updated distribution, valid from NDProMP or IProMP
         """
@@ -214,22 +218,20 @@ class ProMP(object):
             print "there is no updated distribution from NDProMP or IProMP"
             return
         x = self.x
-        x = np.linspace(0.0, 3.3, 101) 
-        mean0 = np.dot(self.Phi.T, self.meanW_nUpdated)
-        std0 = 2 * np.sqrt(np.diag(np.dot(self.Phi.T, np.dot(self.sigmaW_nUpdated, self.Phi))))
-        end = 100
-        plt.fill_between(x[0:end], (mean0-std0)[0:end], (mean0+std0)[0:end], color=color, alpha=alpha_std,label="Posterior ditribution")
-        plt.plot(x[0:end], mean0[0:end], linestyle='-', color=color,  linewidth=mean_line_width,label="Posterior ditribution mean")
-        # plt.fill_between(x[0:90], (mean0-std0)[0:90], (mean0+std0)[0:90], color=color, alpha=alpha_std,label="Posterior ditribution")
-        # plt.plot(x[0:90], mean0[0:90], linestyle='-', color=color,  linewidth=mean_line_width,label="Posterior ditribution mean")
+        distribution_factor = 2
+        mean_updated = np.dot(self.Phi.T, self.meanW_nUpdated)
+        std_updated = 2 * np.sqrt(np.diag(np.dot(self.Phi.T, np.dot(self.sigmaW_nUpdated, self.Phi))))
+        plt.plot(x, mean_updated, linestyle='--', color=color, label="Updated mean", linewidth=mean_line_width)
+        plt.fill_between(x, mean_updated-distribution_factor*std_updated, mean_updated+distribution_factor*std_updated, color=color, alpha=alpha_std)
         # option to show the via point
         if via_show:
             for viapoint_id, viapoint in enumerate(self.viapoints):
-                if viapoint_id ==0:
-                    plt.plot(viapoint['t'], viapoint['obsy'], marker="o", markersize=10, color=color,label="Human observation")
+                if viapoint_id==0:
+                    plt.plot(viapoint['t'], viapoint['obsy'], marker="o", label="Viapoint", markersize=10, color=color)
+                    plt.errorbar(viapoint['t'], viapoint['obsy'], yerr=self.sigmay, fmt="o")
                 else:
                     plt.plot(viapoint['t'], viapoint['obsy'], marker="o", markersize=10, color=color)
-                plt.errorbar(viapoint['t'], viapoint['obsy'], yerr=self.sigmay, fmt="o")
+                    plt.errorbar(viapoint['t'], viapoint['obsy'], yerr=self.sigmay, fmt="o")
 
     def plot_uUpdated(self, legend='', color='g'):
         """
@@ -256,23 +258,7 @@ class ProMP(object):
                 plt.plot(viapoint['t'], viapoint['obsy'], marker="o", markersize=15, color='red')
             # plt.errorbar(viapoint['t'], viapoint['obsy'], yerr=self.sigmay, fmt='o', markersize=15)
 
-    def plot_nUpdated(self, legend='', color='g', via_show=True, alpha_std=0.4, mean_line_width=3):
-        """
-        plot the n-dimension updated distribution, valid from NDProMP or IProMP
-        """
-        if self.meanW_nUpdated is None:
-            print "there is no updated distribution from NDProMP or IProMP"
-            return
-        x = self.x
-        mean0 = np.dot(self.Phi.T, self.meanW_nUpdated)
-        std0 = 2 * np.sqrt(np.diag(np.dot(self.Phi.T, np.dot(self.sigmaW_nUpdated, self.Phi))))
-        plt.plot(x, mean0, linestyle='--', color=color, label=legend, linewidth=mean_line_width)
-        plt.fill_between(x, mean0-std0, mean0+std0, color=color, alpha=alpha_std)
-        # option to show the via point
-        if via_show:
-            for viapoint_id, viapoint in enumerate(self.viapoints):
-                plt.plot(viapoint['t'], viapoint['obsy'], marker="o", markersize=10, color=color)
-                plt.errorbar(viapoint['t'], viapoint['obsy'], yerr=self.sigmay, fmt="o")
+
 
 
 class NDProMP(object):

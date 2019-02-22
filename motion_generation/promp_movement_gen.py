@@ -76,9 +76,10 @@ def main():
             # ipdb.set_trace()
             promp.add_viapoint(timestamp[idx] / alpha_max_list[task_idx], obs_data_post_arr[idx, :])
             promp.param_update(unit_update=True)
-            # promp.promps[task_idx].plot_prior()
-            # promp.promps[task_idx].plot_nUpdated()
-            # plt.show()
+            promp.promps[task_idx].plot_prior_distribution()
+            promp.promps[task_idx].plot_nUpdated_distribution()
+            plt.legend()
+            plt.show()
             # ipdb.set_trace()
     print('Computing the likelihood for each model under observations...')
 

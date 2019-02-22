@@ -46,10 +46,6 @@ def main():
     task_id = 0
     test_index = 8
     obs_ratio = 0.7
-    # plot = True
-    plot_distribution = None
-    plot_3d = None
-    plot_phase = True
 
     # read test data
     obs_data_dict = datasets_raw[task_id][test_index]

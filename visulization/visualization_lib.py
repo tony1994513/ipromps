@@ -9,7 +9,7 @@ import os
 import ConfigParser
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.font_manager import FontProperties
-
+import ipdb
 
 # read conf file
 file_path = os.path.dirname(__file__)
@@ -119,14 +119,43 @@ def plot_preproc_data(num=0):
                 ax.set_ylabel('y(m)')
 
 
-# plot the prior distribution
-def plot_prior(num=0):
+def plot_single_dim_prior_distribution_diff_task(num=0,dim_idx=0):
     for task_idx, MPs in enumerate(MPs_set):
         fig = plt.figure(task_idx+num)
-        fig.suptitle('the prior of ' + info + ' for ' + task_name[task_idx] + ' model')
-        for joint_idx in range(joint_num):
-            ax = fig.add_subplot(joint_num, 1, 1+joint_idx)
-            MPs.promps[joint_idx + info_n_idx[info][0]].plot_prior(b_regression=True)
+        fig.suptitle('Prior_distribution_' + info + '_' + task_name[task_idx]+"_dim_"+str(dim_idx))
+        if method == "ipromp":
+            MPs.promps[dim_idx + info_n_idx[info][0]].plot_prior_distribution()
+        elif method == "promp":
+            MPs.promps[dim_idx].plot_prior_distribution()
+
+def plot_single_dim_prior_distribution_same_task(num=0,task_idx=0):
+    MPs = MPs_set[task_idx]
+    for dim_idx in range(joint_num):
+        fig = plt.figure(dim_idx+num)
+        fig.suptitle('Prior_distribution_' + info + '_' + task_name[task_idx]+"_dim_"+str(dim_idx))
+        if method == "ipromp":
+            MPs.promps[dim_idx + info_n_idx[info][0]].plot_prior_distribution()
+        elif method == "promp":
+            MPs.promps[dim_idx].plot_prior_distribution()
+
+def plot_single_dim_post_distribution_diff_task(num=0,dim_idx=0):
+    for task_idx, MPs_post in enumerate(MPs_set_post):
+        fig = plt.figure(task_idx+num)
+        fig.suptitle('Prior_distribution_' + info + '_' + task_name[task_idx]+"_dim_"+str(dim_idx))
+        if method == "ipromp":
+            MPs_post.promps[dim_idx + info_n_idx[info][0]].plot_prior_distribution()
+        elif method == "promp":
+            MPs_post.promps[dim_idx].plot_nUpdated_distribution()
+
+def plot_single_dim_post_distribution_same_task(num=0,task_idx=0):
+    MPs_post = MPs_set_post[task_idx]
+    for dim_idx in range(joint_num):
+        fig = plt.figure(dim_idx+num)
+        fig.suptitle('Prior_distribution_' + info + '_' + task_name[task_idx]+"_dim_"+str(dim_idx))
+        if method == "ipromp":
+            MPs_post.promps[dim_idx + info_n_idx[info][0]].plot_prior_distribution()
+        elif method == "promp":
+            MPs_post.promps[dim_idx].plot_nUpdated_distribution()
 
 
 # plot alpha distribute
@@ -174,13 +203,7 @@ def plot_alpha(num=0):
         # plt.plot(candidate_x, prob, linewidth=0, color='g', marker='o', markersize=14)
 
 
-# plot the post distribution
-def plot_post(num=0):
-    for task_idx, MPs in enumerate(MPs_set_post):
-        fig = plt.figure(task_idx+num)
-        for joint_idx in range(joint_num):
-            ax = fig.add_subplot(joint_num, 1, 1 + joint_idx)
-            MPs.promps[joint_idx + info_n_idx[info][0]].plot_nUpdated(color='r', via_show=True)
+
 
 # plot the raw data index
 def plot_raw_data_index(num=0):
@@ -260,55 +283,44 @@ def plot_3d_filtered_r_traj(num=0):
             ax.plot(data[:, 0], data[:, 1], data[:, 2], linewidth=1, linestyle='-', alpha=1, color="grey")
         ax.legend(fontsize=20)
 
-# plot the filtered data
-def plot_single_dim(num=0):
+def plot_single_dim_traj_diff_task(num=0, data_type=None,dim_idx=0):
     for task_idx, MPs in enumerate(MPs_set):
         fig = plt.figure(task_idx + num)
-        fig.suptitle('the filtered data of ' + info)
+        fig.suptitle(info+"_"+data_type+"_dimIndex_"+str(dim_idx))
         for demo_idx in range(MPs.num_demos):
             ax = fig.add_subplot(1, 1, 1 )
-            data = datasets_filtered[task_idx][demo_idx][info][:, 1]
-            plt.plot(np.array(range(len(data)))/100.0, data, )
+            if data_type == "raw":
+                data = datasets_raw[task_idx][demo_idx][info][:, dim_idx]
+            elif data_type == "filter":
+                data = datasets_filtered[task_idx][demo_idx][info][:, dim_idx]
+            elif data_type == "norm":
+                data = datasets_norm[task_idx][demo_idx][info][:, dim_idx]
+            plt.plot(np.array(range(len(data)))/100.0, data)
             ax.set_xlabel('t(s)')
             ax.set_ylabel('y(m)')
             plt.legend()
 
-def plot_preproc_result(num):
-    fig = plt.figure(num)
-    for demo_idx in range(17):
-        ax = fig.add_subplot(1, 1, 1)
-        data = datasets_norm[0][demo_idx][info][:, 1]
-        plt.plot(np.array(range(len(data))) / 100.0, data)
-        ax.set_xlabel('t(s)')
-        ax.set_ylabel('y(m)')
-    fig = plt.figure(num+1)
-    for demo_idx in range(17):
-        ax = fig.add_subplot(1, 1, 1)
-        data = datasets_norm_preproc[0][demo_idx][info][:, 1]
-        plt.plot(np.array(range(len(data))) / 100.0, data)
-        ax.set_xlabel('t(s)')
-        ax.set_ylabel('y(m)')
-
-
-def plot_norm_result(num):
-    fig = plt.figure(num)
-    for demo_idx in range(17):
-        ax = fig.add_subplot(1, 1, 1)
-        data = datasets_filtered[0][demo_idx][info][:, 1]
-        plt.plot(np.array(range(len(data))) / 100.0, data)
-        ax.set_xlabel('t(s)')
-        ax.set_ylabel('y(m)')
-    fig = plt.figure(num+1)
-    for demo_idx in range(17):
-        ax = fig.add_subplot(1, 1, 1)
-        data = datasets_norm[0][demo_idx][info][:, 1]
-        plt.plot(np.array(range(len(data))) / 100.0, data)
-        ax.set_xlabel('t(s)')
-        ax.set_ylabel('y(m)')
+def plot_single_dim_traj_same_task(num=0, data_type=None,task_idx=0):
+        for dim_idx in range(joint_num):
+            fig = plt.figure(dim_idx + num)
+            ax = fig.add_subplot(1, 1, 1 )
+            fig.suptitle(info+"_"+data_type+"_taskIndex_"+task_name[task_idx]+"_dim_"+str(dim_idx))
+            for demo_idx in range(MPs_set[task_idx].num_demos):      
+                if data_type == "raw":
+                    data = datasets_raw[task_idx][demo_idx][info][:, dim_idx]
+                elif data_type == "filter":
+                    data = datasets_filtered[task_idx][demo_idx][info][:, dim_idx]
+                elif data_type == "norm":
+                    data = datasets_norm[task_idx][demo_idx][info][:, dim_idx]
+                plt.plot(np.array(range(len(data)))/100.0, data)
+                ax.set_xlabel('t(s)')
+                ax.set_ylabel('y(m)')
+            plt.legend()
 
 def plot_MPs_gen(num=0):
     for task_idx, demo_list in enumerate(data_index):
         fig = plt.figure(task_idx + num,figsize=(8, 6), dpi=80, facecolor='w', edgecolor='w')
+        fig.suptitle(task_name[task_idx],fontsize=20)
         ax = fig.gca(projection='3d')
         if method == "promp":
             robot_gt = ground_truth['left_joints']
@@ -369,15 +381,15 @@ def main():
     # plot_norm_data(0)
     # plot_preproc_data(10)
     # plot_filtered_data(10)
-    # plot_single_dim(0)
-    # plot_prior(0)
-    # plot_post()
+    # plot_single_dim_traj_diff_task(data_type="norm",dim_idx=1) # raw, filter,norm
+    # plot_single_dim_traj_same_task(data_type="norm",task_idx=1) 
+    # plot_single_dim_prior_distribution_diff_task(dim_idx=0)
+    # plot_single_dim_prior_distribution_same_task(num=0,task_idx=0)
+    # plot_single_dim_post_distribution_diff_task(dim_idx=0)
+    # plot_single_dim_post_distribution_same_task(num=0,task_idx=0)
     # plot_alpha()
-    # plot_robot_traj()
     # plot_raw_data_index()
     # plot_filter_data_index(20)
-    # plot_preproc_result(10)
-    # plot_norm_result(10)
 
     # plot_3d_raw_traj(10)
     # plot_3d_gen_r_traj_online(10)
