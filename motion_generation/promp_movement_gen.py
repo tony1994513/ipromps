@@ -44,7 +44,7 @@ def main():
     left_joints = obs_data_dict['left_joints']
     obs_data = left_joints
     timestamp = obs_data_dict['stamp']
-
+    gt_time = np.copy(timestamp)
     # filter the data
     obs_data = gaussian_filter1d(obs_data.T, sigma=sigma).T
     # preprocessing for the data
@@ -76,10 +76,10 @@ def main():
             # ipdb.set_trace()
             promp.add_viapoint(timestamp[idx] / alpha_max_list[task_idx], obs_data_post_arr[idx, :])
             promp.param_update(unit_update=True)
-            promp.promps[task_idx].plot_prior_distribution()
-            promp.promps[task_idx].plot_nUpdated_distribution()
-            plt.legend()
-            plt.show()
+            # promp.promps[task_idx].plot_prior()
+            # promp.promps[task_idx].plot_nUpdated()
+            # plt.legend()
+            # plt.show()
             # ipdb.set_trace()
     print('Computing the likelihood for each model under observations...')
 
@@ -109,7 +109,7 @@ def main():
     joblib.dump(promp_set, os.path.join(datasets_path, 'pkl/'+method+'_post_offline.pkl'))
     # save the robot traj
     print('Saving the robot traj...')
-    joblib.dump([traj_full, obs_data_dict,viapoint], os.path.join(datasets_path, 'pkl/'+method+'_traj_offline.pkl'))
+    joblib.dump([traj_full, obs_data_dict,viapoint,gt_time], os.path.join(datasets_path, 'pkl/'+method+'_traj_offline.pkl'))
 
 
 if __name__ == '__main__':
