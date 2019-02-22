@@ -316,28 +316,40 @@ def plot_MPs_gen(num=0):
             ax.plot(robot_gt[:, 0], robot_gt[:, 1], robot_gt[:, 2],
                     linewidth=3, linestyle='-', color='r', alpha=1.0, label='Robot movement groundtruth')
             ax.plot(robot_pred[:, 0], robot_pred[:, 1], robot_pred[:, 2],
-                    linewidth=3, linestyle='-', color='g', alpha=1.0, label='Robot movement prediction')  
-            ax.plot(viapoint[:, 0], viapoint[:, 1], viapoint[:, 2],
-                    'o', markersize=10, label='via_points', alpha=1.0,
-                    markerfacecolor='none', markeredgewidth=1.0, markeredgecolor='r')                  
-            ax.legend(fontsize=20)
+                    linewidth=3, linestyle='-', color='g', alpha=1.0, label='Robot movement prediction')   
+            
         elif method == "ipromp":
             robot_gt = ground_truth['left_joints']
             robot_pred = MP_traj_offline[task_idx][1]
             human_gt = ground_truth['left_hand']
             human_pred = MP_traj_offline[task_idx][0]
             ax.plot(robot_gt[:, 0], robot_gt[:, 1], robot_gt[:, 2],
-                    linewidth=3, linestyle='-', color='r', alpha=1.0, label='Robot movement groundtruth')
+                    linewidth=4, linestyle='-', color='r', alpha=1.0, label='Robot movement groundtruth')
             ax.plot(robot_pred[:, 0], robot_pred[:, 1], robot_pred[:, 2],
-                    linewidth=3, linestyle='-', color='g', alpha=1.0, label='Robot movement prediction')  
+                    linewidth=4, linestyle='-', color='g', alpha=1.0, label='Robot movement prediction')  
             ax.plot(human_gt[:, 0], human_gt[:, 1], human_gt[:, 2],
-                    linewidth=3, linestyle='-', color='r', alpha=1.0, label='Human movement groundtruth')
+                    linewidth=4, linestyle='-', color='r', alpha=1.0, label='Human movement groundtruth')
             ax.plot(human_pred[:, 0], human_pred[:, 1], human_pred[:, 2],
-                    linewidth=3, linestyle='-', color='g', alpha=1.0, label='Human movement prediction')  
-            ax.plot(viapoint[:, 0], viapoint[:, 1], viapoint[:, 2],
-                    'o', markersize=10, label='via_points', alpha=1.0,
-                    markerfacecolor='none', markeredgewidth=1.0, markeredgecolor='r')                  
-            ax.legend(fontsize=20)
+                    linewidth=4, linestyle='-', color='g', alpha=1.0, label='Human movement prediction')  
+       
+        ax.plot(viapoint[:, 0], viapoint[:, 1], viapoint[:, 2],
+                'o', markersize=15, label='Via_points', alpha=1.0,
+                markerfacecolor='none', markeredgewidth=4.0,  markeredgecolor='r')  
+
+        label_font = 20
+        label_pad = 25
+        tick_fontsize = 20
+        tick_pad = 10
+        legend_fontsize = 20
+
+        ax.set_xlabel("X(m)",fontsize=label_font,labelpad=label_pad) # set axis label
+        ax.set_ylabel("Y(m)",fontsize=label_font,labelpad=label_pad)               
+        ax.set_zlabel("Z(m)",fontsize=label_font,labelpad=label_pad)
+
+        ax.xaxis.set_tick_params(labelsize=tick_fontsize,pad=tick_pad)
+        ax.yaxis.set_tick_params(labelsize=tick_fontsize,pad=tick_pad)
+        ax.zaxis.set_tick_params(labelsize=tick_fontsize,pad=tick_pad)
+        ax.legend(fontsize=legend_fontsize)
 
 
 def plot_MPs_offline(num=0):
@@ -371,9 +383,9 @@ def main():
     # plot_3d_gen_r_traj_online(10)
     plot_MPs_offline(0)
     # pairs_online(10)
-
-    plt.yticks(fontsize=15)
-    plt.xticks(fontsize=15)
+    # plt.yticks(fontsize=20)
+    # plt.xticks(fontsize=20)
+    plt.legend()
     # plt.savefig('fig3',format='eps')
     plt.show()
 
