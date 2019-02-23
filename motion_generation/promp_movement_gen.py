@@ -35,8 +35,7 @@ data_index = [map(int, task[1].split(',')) for task in data_index_sec]
 def main():
     task_id = 0
     test_index = 8
-    obs_ratio = 0.6
-    plot = True
+    obs_ratio = 0.4
 
     # read test data
     obs_data_dict = datasets_raw[task_id][test_index]
@@ -101,6 +100,7 @@ def main():
     # robot motion generation
     traj_full = []
     for promp_id, promp in enumerate(promp_set):
+        # ipdb.set_trace()
         [traj_time, traj] = promp.gen_real_traj(alpha_max_list[promp_id])
         traj = promp.min_max_scaler.inverse_transform(traj) 
         traj_full.append(traj)
