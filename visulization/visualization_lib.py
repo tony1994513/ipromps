@@ -17,16 +17,16 @@ cp_models = ConfigParser.SafeConfigParser()
 cp_models.read(os.path.join(file_path, '../cfg/models.cfg'))
 # the datasets path
 datasets_path = os.path.join(file_path, cp_models.get('datasets', 'path'))
-method = "ipromp"
+method = "promp"
 # load datasets
 MPs_set = joblib.load(os.path.join(datasets_path, 'pkl/'+method+'_set.pkl'))
-MPs_set_post = joblib.load(os.path.join(datasets_path, 'pkl/'+method+'_post_offline.pkl'))
+MPs_post_set = joblib.load(os.path.join(datasets_path, 'pkl/'+method+'_post_offline.pkl'))
 datasets_raw = joblib.load(os.path.join(datasets_path, 'pkl/'+method+'_datasets_raw.pkl'))
 datasets_norm = joblib.load(os.path.join(datasets_path, 'pkl/'+method+'_datasets_norm.pkl'))
 datasets_filtered = joblib.load(os.path.join(datasets_path, 'pkl/'+method+'_datasets_filtered.pkl'))
 datasets_norm_preproc = joblib.load(os.path.join(datasets_path, 'pkl/'+method+'_datasets_norm_preproc.pkl'))
 task_name = joblib.load(os.path.join(datasets_path, 'pkl/task_name_list.pkl'))
-[MP_traj_offline, ground_truth, viapoint,gt_time] = joblib.load(os.path.join(datasets_path, 'pkl/'+method+'_traj_offline.pkl'))
+[MP_traj_offline, ground_truth, viapoint,gt_time,viapoint_time] = joblib.load(os.path.join(datasets_path, 'pkl/'+method+'_traj_offline.pkl'))
 
 # robot_traj_online = joblib.load(os.path.join(datasets_path, 'pkl/robot_traj_online.pkl'))
 # obs_data_online = joblib.load(os.path.join(datasets_path, 'pkl/obs_data_online.pkl'))
@@ -118,85 +118,73 @@ def plot_preproc_data(num=0):
                 ax.set_xlabel('t(s)')
                 ax.set_ylabel('y(m)')
 
-def plot_single_dim_prior_distribution(num=0,dim_idx=0,task_idx=0,diffTask_flag=None):
-    color = "b";alpha_std=0.4;mean_line_width=4;std_times=1
-    if diffTask_flag == True:
-        for task_idx, MPs in enumerate(MPs_set):
-            fig = plt.figure(task_idx+num)
+def min_max_inverse_func(MPs,demo_1d):
+    temp = np.zeros((demo_1d.shape[0],joint_num))
+    temp[:,0] = demo_1d
+    temp_inv = MPs.min_max_scaler.inverse_transform(temp)
+    return temp_inv[:,0]
 
-            fig.suptitle('Prior_distribution_' + info + '_' + task_name[task_idx]+"_dim_"+str(dim_idx))
-            pred_time = np.linspace(0,MPs.mean_alpha, MPs.num_samples)
-            if method == "promp":
-                std = std_times * np.sqrt(np.diag(np.dot(MPs.Phi.T, np.dot(MPs.promps[dim_idx].sigmaW, MPs.Phi))))
-                robot_pred = MP_traj_offline[task_idx][:,dim_idx]
-                robot_gt = ground_truth['left_joints'][:,dim_idx]
-                plt.plot(pred_time, robot_pred, linestyle='-', color=color, label="Predict Mean", linewidth=mean_line_width)
-                plt.plot(gt_time, robot_gt, linestyle='-', color="black", label="Ground Truth", linewidth=mean_line_width)
-                plt.fill_between(pred_time, robot_pred-std, robot_pred+std, color=color, alpha=alpha_std,label="Initial distribution")
-                
-            elif method == "ipromp":
-                std = std_times * np.sqrt(np.diag(np.dot(MPs.Phi.T, np.dot(MPs.promps[dim_idx].sigmaW, MPs.Phi))))
-                robot_gt = ground_truth['left_joints'][:,dim_idx]
-                robot_pred = MP_traj_offline[task_idx][1][:,dim_idx]
+def plot_MPs_func(MPs, MPs_post, num=0,task_idx=None,dim_idx=None,prior_distribution_flag=True):
+    color = "b";prior_alpha=0.3;post_alpha=0.7;mean_line_width=4;std_times=2
+    viapoint_color="r"
+    if prior_distribution_flag == True:
+        fig = plt.figure(task_idx+num)
+        fig.suptitle(method+'Prior_distribution_' + info + '_' + task_name[task_idx]+"_dim_"+str(dim_idx))
+        prior_pred_time = np.linspace(0,MPs.mean_alpha, MPs.num_samples)
+        mean = np.dot(MPs.Phi.T, MPs.promps[dim_idx].meanW)
+        mean = min_max_inverse_func(MPs,mean)
+        std = std_times * np.sqrt(np.diag(np.dot(MPs.Phi.T, np.dot(MPs.promps[dim_idx].sigmaW, MPs.Phi))))
+        plt.fill_between(prior_pred_time, mean-std, mean+std, color=color, alpha=prior_alpha,label="Prior distribution")
+        plt.legend()
+    else:
+        post_pred_time = np.linspace(0,MPs_post.alpha_fit, MPs_post.num_samples)
+        mean_post = np.dot(MPs_post.Phi.T, MPs_post.promps[dim_idx].sigmaW_nUpdated)
+        std_post = std_times * np.sqrt(np.diag(np.dot(MPs_post.Phi.T, np.dot(MPs_post.promps[dim_idx].sigmaW_nUpdated, MPs_post.Phi))))
+        if method == "promp":
+            fig = plt.figure(task_idx+num)
+            fig.suptitle(method+'Post_distribution_' + info + '_' + task_name[task_idx]+"_dim_"+str(dim_idx))
+            robot_pred = MP_traj_offline[task_idx][:,dim_idx]
+            robot_gt = ground_truth['left_joints'][:,dim_idx]
+            plt.plot(post_pred_time, robot_pred, label="Robot prediction",linestyle='-', color=color,  linewidth=mean_line_width)
+            plt.plot(gt_time, robot_gt, label="Robot gorundtruth",linestyle='-', color="black",  linewidth=mean_line_width)
+            plt.fill_between(post_pred_time, robot_pred-std_post, robot_pred+std_post, color=color, alpha=post_alpha,label="Initial robot distribution")
+            plt.plot(viapoint_time, viapoint[:,dim_idx], marker="o", markersize=10, color=viapoint_color,
+                      label='Via_points', alpha=1.0, markerfacecolor='none', markeredgewidth=4.0,  markeredgecolor='r')  
+            plt.legend()
+
+        elif method == "ipromp":
+            if dim_idx>= human_index[0] and dim_idx<human_index[1]:
+                fig = plt.figure(task_idx+num+dim_idx)
+                fig.suptitle(method+'Post_distribution_' + info + '_' + task_name[task_idx]+"_dim_"+str(dim_idx))
                 human_gt = ground_truth['left_hand'][:,dim_idx]
                 human_pred = MP_traj_offline[task_idx][0][:,dim_idx]
-                if dim_idx>= human_index[0] and dim_idx<=human_index[1]:
-                    plt.plot(gt_time, human_gt, label="Human gorundtruth",linestyle='-', color="black",  linewidth=mean_line_width)
-                    plt.plot(pred_time, human_pred, label="Human prediction",linestyle='-', color=color,  linewidth=mean_line_width)
-                    plt.fill_between(pred_time, human_pred-std, human_pred+std, color=color, alpha=alpha_std,label="Initial human distribution")
-                else:
-                    plt.plot(pred_time, robot_pred, label="Robot prediction",linestyle='-', color=color,  linewidth=mean_line_width)
-                    plt.plot(gt_time, robot_gt, label="Robot gorundtruth",linestyle='-', color="black",  linewidth=mean_line_width)
-                    plt.fill_between(pred_time, robot_pred-std, robot_pred+std, color=color, alpha=alpha_std,label="Initial robot distribution")
+                plt.plot(gt_time, human_gt, label="Human gorundtruth",linestyle='-', color="black",  linewidth=mean_line_width)
+                plt.plot(post_pred_time, human_pred, label="Human prediction",linestyle='-', color=color,  linewidth=mean_line_width)
+                plt.fill_between(post_pred_time, human_pred-std_post, human_pred+std_post, color=color, alpha=post_alpha,label="Post distribution")
+                # ipdb.set_trace()
+                plt.plot(viapoint_time, viapoint[:,dim_idx], marker="o", markersize=10, color=viapoint_color,
+                        label='Via_points', alpha=1.0, markerfacecolor='none', markeredgewidth=4.0,  markeredgecolor='r')
+                plt.legend()
+            else:
+                fig = plt.figure(task_idx+num+dim_idx)
+                fig.suptitle(method+'Post_distribution_' + info + '_' + task_name[task_idx]+"_dim_"+str(dim_idx))
+                robot_gt = ground_truth['left_joints'][:,dim_idx-human_index[1]]
+                robot_pred = MP_traj_offline[task_idx][1][:,dim_idx-human_index[1]]
+                plt.plot(post_pred_time, robot_pred, label="Robot prediction",linestyle='-', color=color,  linewidth=mean_line_width)
+                plt.plot(gt_time, robot_gt, label="Robot gorundtruth",linestyle='-', color="black",  linewidth=mean_line_width)
+                plt.fill_between(post_pred_time, robot_pred-std, robot_pred+std, color=color, alpha=post_alpha,label="Post distribution")
+                plt.legend()
 
+def plot_single_dim_distribution(num=0,dim_idx=0,task_idx=0,diffTask_flag=None,prior_distribution_flag=None):
+    if diffTask_flag == True:
+        for task_idx, MPs in enumerate(MPs_set):
+            Mps_post = MPs_post_set[task_idx]
+            plot_MPs_func(MPs, Mps_post, num=num,prior_distribution_flag=prior_distribution_flag,task_idx=task_idx,dim_idx=dim_idx)
     else:
         MPs = MPs_set[task_idx]
-        pred_time = np.linspace(0,MPs.mean_alpha, MPs.num_samples)
+        Mps_post = MPs_post_set[task_idx]
         for dim_idx in range(joint_num):
-            fig = plt.figure(dim_idx+num)
-            fig.suptitle('Prior_distribution_' + info + '_' + task_name[task_idx]+"_dim_"+str(dim_idx))
-            if method == "promp":
-                std = std_times * np.sqrt(np.diag(np.dot(MPs.Phi.T, np.dot(MPs.promps[dim_idx].sigmaW, MPs.Phi))))
-                robot_pred = MP_traj_offline[task_idx][:,dim_idx]
-                robot_gt = ground_truth['left_joints'][:,dim_idx]
-                plt.plot(pred_time, robot_pred, linestyle='-', color=color, label="Predict Mean", linewidth=mean_line_width)
-                plt.plot(gt_time, robot_gt, linestyle='-', color="black", label="Ground Truth", linewidth=mean_line_width)
-                plt.fill_between(pred_time, robot_pred-std, robot_pred+std, color=color, alpha=alpha_std,label="Initial distribution")
-            
-            elif method == "ipromp":
-                std = std_times * np.sqrt(np.diag(np.dot(MPs.Phi.T, np.dot(MPs.promps[dim_idx].sigmaW, MPs.Phi))))
-
-                if dim_idx>= human_index[0] and dim_idx<human_index[1]:
-                    human_gt = ground_truth['left_hand'][:,dim_idx]
-                    human_pred = MP_traj_offline[task_idx][0][:,dim_idx]
-                    plt.plot(gt_time, human_gt, label="Human gorundtruth",linestyle='-', color="black",  linewidth=mean_line_width)
-                    plt.plot(pred_time, human_pred, label="Human prediction",linestyle='-', color=color,  linewidth=mean_line_width)
-                    plt.fill_between(pred_time, human_pred-std, human_pred+std, color=color, alpha=alpha_std,label="Initial human distribution")
-                else:
-                    robot_gt = ground_truth['left_joints'][:,dim_idx-3]
-                    robot_pred = MP_traj_offline[task_idx][1][:,dim_idx-3]
-                    plt.plot(pred_time, robot_pred, label="Robot prediction",linestyle='-', color=color,  linewidth=mean_line_width)
-                    plt.plot(gt_time, robot_gt, label="Robot gorundtruth",linestyle='-', color="black",  linewidth=mean_line_width)
-                    plt.fill_between(pred_time, robot_pred-std, robot_pred+std, color=color, alpha=alpha_std,label="Initial robot distribution")
-
-def plot_single_dim_post_distribution(num=0,dim_idx=0,task_idx=0,diffTask_flag=None):
-    if diffTask_flag == True:
-        for task_idx, MPs_post in enumerate(MPs_set_post):
-            fig = plt.figure(task_idx+num)
-            fig.suptitle('Prior_distribution_' + info + '_' + task_name[task_idx]+"_dim_"+str(dim_idx))
-            if method == "ipromp":
-                MPs_post.promps[dim_idx + info_n_idx[info][0]].plot_nUpdated_distribution(end_t=MPs_post.alpha_fit,min_max_scaler=MPs.min_max_scaler,via_show=False)
-            elif method == "promp":
-                MPs_post.promps[dim_idx].plot_nUpdated_distribution(end_t=MPs_post.alpha_fit, min_max_scaler=MPs.min_max_scaler,via_show=False)
-    else:
-        MPs_post = MPs_set_post[task_idx]
-        for dim_idx in range(joint_num):
-            fig = plt.figure(dim_idx+num)
-            fig.suptitle('Prior_distribution_' + info + '_' + task_name[task_idx]+"_dim_"+str(dim_idx))
-            if method == "ipromp":
-                MPs_post.promps[dim_idx + info_n_idx[info][0]].plot_nUpdated_distribution(end_t=MPs_post.alpha_fit,min_max_scaler=MPs.min_max_scaler,via_show=False)
-            elif method == "promp":
-                MPs_post.promps[dim_idx].plot_nUpdated_distribution(end_t=MPs_post.alpha_fit,min_max_scaler=MPs.min_max_scaler,via_show=False)
+            plot_MPs_func(MPs, Mps_post,num=num, prior_distribution_flag=prior_distribution_flag, task_idx=task_idx,dim_idx=dim_idx)
         
 
 # plot alpha distribute
@@ -396,8 +384,8 @@ def main():
     # plot_preproc_data(10)
     # plot_filtered_data(10)
     # plot_single_dim_traj(num=0,dim_idx=0, diffTask_flag=False,data_type="norm") # raw, filter,norm
-    plot_single_dim_prior_distribution(num=0,dim_idx=0,task_idx=0,diffTask_flag=None)
-    # plot_single_dim_post_distribution(num=0,dim_idx=0,task_idx=0,diffTask_flag=None)
+    plot_single_dim_distribution(num=0,dim_idx=0,task_idx=0,diffTask_flag=True,prior_distribution_flag=True)
+    plot_single_dim_distribution(num=0,dim_idx=0,task_idx=0,diffTask_flag=True,prior_distribution_flag=False)
 
     # plot_alpha()
     # plot_raw_data_index()

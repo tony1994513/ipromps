@@ -58,6 +58,7 @@ def main():
     obs_data_post_arr = obs_data_post_arr[start_idx:num_obs:ratio, :]
     timestamp = timestamp[start_idx:num_obs:ratio]
     viapoint = obs_data[start_idx:num_obs:ratio, :]
+    viapoint_time = np.copy(timestamp)
 
     # phase estimation
     print('Phase estimating...')
@@ -109,7 +110,7 @@ def main():
     joblib.dump(promp_set, os.path.join(datasets_path, 'pkl/'+method+'_post_offline.pkl'))
     # save the robot traj
     print('Saving the robot traj...')
-    joblib.dump([traj_full, obs_data_dict,viapoint,gt_time], os.path.join(datasets_path, 'pkl/'+method+'_traj_offline.pkl'))
+    joblib.dump([traj_full, obs_data_dict,viapoint,gt_time,viapoint_time], os.path.join(datasets_path, 'pkl/'+method+'_traj_offline.pkl'))
 
 
 if __name__ == '__main__':
