@@ -25,6 +25,7 @@ def main(num_dim=7, sigma=5, len_norm=101, data_index=None,method="promp",num_de
     robot_dim = leftJoint_index[-1] - leftJoint_index[0]
     # load raw datasets
     datasets_raw = []
+    ipdb.set_trace()
     for task_path in task_path_list:
         left_hand_path = os.path.join(task_path, 'left_hand')
         left_joints_path = os.path.join(task_path, 'left_joints')

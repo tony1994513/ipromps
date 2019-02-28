@@ -11,7 +11,7 @@ from scipy.ndimage.filters import gaussian_filter1d
 from scipy.interpolate import griddata
 import ipdb
 
-import load_data
+import load_openni_data
 import train_models
 import noise_cov_cal
 
@@ -75,8 +75,8 @@ task_path_list = sorted(glob.glob(os.path.join(datasets_path, 'raw/*')))
 
 def main():
     print("-----------")
-    print('## Running the %s' % load_data.__name__)
-    load_data.main(num_dim=num_dim, sigma=sigma, method=method, num_demo=num_demo,data_index=data_index, 
+    print('## Running the %s' % load_openni_data.__name__)
+    load_openni_data.main(num_dim=num_dim, sigma=sigma, method=method, num_demo=num_demo,data_index=data_index, 
                    len_norm=len_norm, leftHand_index=leftHand_index, leftJoint_index=leftJoint_index,
                     task_path_list=task_path_list, datasets_path=datasets_path,human_index=human_index,
                     robot_index=robot_index)
