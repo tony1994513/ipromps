@@ -17,7 +17,7 @@ cp_models = ConfigParser.SafeConfigParser()
 cp_models.read(os.path.join(file_path, '../cfg/models.cfg'))
 # the datasets path
 datasets_path = os.path.join(file_path, cp_models.get('datasets', 'path'))
-method = "promp"
+method = cp_models.get('movement primitives', 'method')
 # load datasets
 MPs_set = joblib.load(os.path.join(datasets_path, 'pkl/'+method+'_set.pkl'))
 MPs_post_set = joblib.load(os.path.join(datasets_path, 'pkl/'+method+'_post_offline.pkl'))

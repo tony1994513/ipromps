@@ -18,13 +18,13 @@ import noise_cov_cal
 # the current file path
 file_path = os.path.dirname(__file__)
 
-method = "ipromp"
-# method = "emg_ipromp"
-# method = "ipromp"
+
 
 # read models cfg file
 cp_models = ConfigParser.SafeConfigParser()
 cp_models.read(os.path.join(file_path, '../cfg/models.cfg'))
+
+method = cp_models.get('movement primitives', 'method')
 
 # read models params
 datasets_path = os.path.join(file_path, cp_models.get('datasets', 'path'))
